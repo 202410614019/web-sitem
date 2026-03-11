@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+
+    <style>
+        :root {
+            --verde: #1a6b3c;
+            --oro: #c5a45a;
+            --bordo: #e6dfd3;
+            --text: #1c1c1e;
+            --soft: #6b6b70;
+            --danger: #d9534f;
+            --shadow: 0 12px 30px rgba(0,0,0,0.08);
+            --shadow-hover: 0 18px 40px rgba(0,0,0,0.15);
+        }
+
+        /* Temel ayarlar değişmedi */
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: 'DM Sans', sans-serif; background: #f8f5ef; color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; transition: 0.3s ease; }
+        
+        body.dark-mode { background: #1a1a1a; color: #f8f5ef; }
+        body.dark-mode header { background: rgba(30, 30, 30, 0.9); border-bottom-color: #333; }
+        body.dark-mode .sidebar { background: #222; border-right-color: #333; }
+        body.dark-mode .place-card, body.dark-mode .airport-card { background: #2d2d2d; border-color: #444; }
+        body.dark-mode .city-btn { background: #2d2d2d; border-color: #444; color: #eee; }
+        body.dark-mode .trans-btn { background: #2d2d2d; border-color: #444; }
+        body.dark-mode .weather-display, body.dark-mode .mode-toggle { background: #2d2d2d; border-color: #444; color: #eee; }
+
+        header { 
+            height: 70px; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; 
+            background: rgba(255,255,255,0.8); backdrop-filter: blur(14px); border-bottom: 1px solid var(--bordo); z-index: 2000; 
+        }
+
+        .budget-wrapper { flex: 1; max-width: 250px; margin: 0 20px; }
+        .budget-info { display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; margin-bottom: 5px; color: var(--soft); }
+        .budget-bar-bg { background: #e0e0e0; height: 6px; border-radius: 10px; overflow: hidden; }
+        .budget-bar-fill { height: 100%; width: 0%; background: var(--verde); transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .budget-bar-fill.danger { background: var(--danger); }
+
+        .main-container { flex: 1; display: flex; overflow: hidden; }
+        .sidebar { width: 420px; background: white; border-right: 1px solid var(--bordo); display: flex; flex-direction: column; box-shadow: var(--shadow); }
+        
+        .sidebar-tabs { display: flex; border-bottom: 1px solid var(--bordo); background: #fafafa; }
+        .tab-btn { flex: 1; padding: 15px; border: none; background: none; font-size: 12px; font-weight: bold; color: var(--soft); cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px; }
+        .tab-btn.active { color: var(--verde); border-bottom: 2px solid var(--verde); background: white; }
+
+        .sidebar-scroll { flex: 1; overflow-y: auto; padding: 24px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .section-label { font-size: 10px; letter-spacing: .25em; color: var(--oro); text-transform: uppercase; margin: 20px 0 12px; }
+        
+        .city-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
+        .city-btn { 
+            background: white; border: 1px solid var(--bordo); padding: 16px; border-radius: 16px; 
+            cursor: pointer; transition: all 0.3s ease; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 4px;
+        }
+        .city-btn:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+        .city-btn.active { border-width: 2px; }
+        
+        .city-btn[data-city="Rome"].active { background: #f0f7f4; border-color: #1a6b3c; color: #1a6b3c; }
+        .city-btn[data-city="Florence"].active { background: #fff5f7; border-color: #d63384; color: #d63384; }
+        .city-btn[data-city="Venice"].active { background: #fff9e6; border-color: #ffc107; color: #856404; }
+        .city-btn[data-city="Milan"].active { background: #f0f4ff; border-color: #0d6efd; color: #0d6efd; }
+        .city-btn[data-city="Naples"].active { background: #fff2f0; border-color: #dc3545; color: #dc3545; }
+        .city-btn[data-city="Turin"].active { background: #f8f9fa; border-color: #6c757d; color: #343a40; }
+
+        .transport-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 20px; }
+        .trans-btn { 
+            padding: 12px; border: 1px solid var(--bordo); background: white; border-radius: 12px; 
+            cursor: pointer; transition: 0.3s; color: var(--soft); display: flex; flex-direction: column; align-items: center; gap: 4px;
+        }
+        .trans-btn.active { background: var(--verde); color: white; border-color: var(--verde); }
+
+        .place-card { 
+            background: white; border-radius: 14px; border: 1px solid var(--bordo); 
+            padding: 16px; margin-bottom: 12px; position: relative; transition: .25s; box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+        }
+        .place-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--verde); border-radius: 10px 0 0 10px; }
+        .place-card.indoor::before { background: #2980b9; }
+        .place-card.food-stop::before { background: var(--oro); }
+
+        /* YENİ HAVALİMANI TASARIMI */
+        .airport-hero {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            padding: 20px; border-radius: 20px; color: white; margin-bottom: 25px;
+            position: relative; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        .airport-hero::after {
+            content: "\f5b0"; font-family: "Font Awesome 5 Free"; font-weight: 900;
+            position: absolute; right: -20px; bottom: -20px; font-size: 100px; opacity: 0.1;
+        }
+        .airport-hero h3 { font-family: 'Cormorant Garamond', serif; font-size: 24px; margin-bottom: 5px; }
+        .airport-hero p { font-size: 12px; opacity: 0.9; text-transform: uppercase; letter-spacing: 1px; }
+
+        .airport-card { 
+            background: white; border-radius: 18px; border: 1px solid var(--bordo); 
+            padding: 20px; margin-bottom: 15px; transition: .3s; display: flex; align-items: center; gap: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .airport-card:hover { transform: scale(1.02); box-shadow: var(--shadow-hover); border-color: var(--oro); }
+        
+        .airport-icon-box {
+            width: 50px; height: 50px; background: #f0f4ff; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; font-size: 20px; color: #1a2a6c;
+        }
+        .airport-details { flex: 1; }
+        .airport-details h4 { font-size: 16px; font-weight: 600; margin-bottom: 4px; color: var(--text); }
+        .airport-meta { display: flex; gap: 15px; font-size: 12px; color: var(--soft); }
+        .airport-price-tag {
+            background: var(--verde); color: white; padding: 6px 12px; border-radius: 10px;
+            font-size: 13px; font-weight: bold;
+        }
+        
+        .card-name { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 600; }
+        
+        .crowd-indicator { margin-top: 8px; }
+        .crowd-bar-bg { background: #eee; height: 4px; border-radius: 4px; margin: 4px 0; overflow: hidden; }
+        .crowd-bar-fill { height: 100%; transition: 0.5s; }
+        .crowd-text { font-size: 10px; font-weight: bold; color: var(--soft); }
+
+        .maps-link {
+            display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 6px 12px; 
+            background: #f0f0f0; border-radius: 8px; font-size: 11px; font-weight: bold; text-decoration: none; color: #555; transition: 0.2s;
+        }
+        .maps-link:hover { background: #4285F4; color: white; }
+
+        #map { flex: 1; z-index: 1; }
+
+        .weather-display, .mode-toggle { 
+            padding: 8px 20px; border-radius: 30px; font-size: 13px; border: 1px solid var(--bordo); 
+            background: white; display: flex; align-items: center; gap: 8px; cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-brand">
+        <div class="brand-text"><h1>İtalya Rota Sistemi</h1><small>Smart Tourism Route Management</small></div>
+    </div>
+
+    <div class="budget-wrapper">
+        <div class="budget-info">
+            <span>BÜTÇE TAKİBİ</span>
+            <span id="budgetLabel">€0 / €100</span>
+        </div>
+        <div class="budget-bar-bg">
+            <div id="budgetBar" class="budget-bar-fill"></div>
+        </div>
+    </div>
+
+    <div style="display: flex; gap: 10px;">
+        <div class="mode-toggle" onclick="toggleDarkMode()">
+            <i id="modeIcon" class="fas fa-moon"></i> <span id="modeText">Gece Modu</span>
+        </div>
+        <div class="weather-display" id="weatherInfo">
+            <i class="fas fa-sun"></i> <span>Hava Durumu...</span>
+        </div>
+    </div>
+</header>
+
+<div class="main-container">
+    <div class="sidebar">
+        <div class="sidebar-tabs">
+            <button class="tab-btn active" onclick="switchTab('route-tab')"><i class="fas fa-map-marked-alt"></i> Rota</button>
+            <button class="tab-btn" onclick="switchTab('airport-tab')"><i class="fas fa-plane-departure"></i> Transfer</button>
+        </div>
+
+        <div class="sidebar-scroll">
+            <div id="route-tab" class="tab-content active">
+                <div class="section-label">Şehir Seçin</div>
+                <div class="city-grid">
+                    <button class="city-btn active" data-city="Rome" onclick="selectCity(this)"><span>🏛️ Roma</span></button>
+                    <button class="city-btn" data-city="Florence" onclick="selectCity(this)"><span>🌸 Floransa</span></button>
+                    <button class="city-btn" data-city="Venice" onclick="selectCity(this)"><span>🛶 Venedik</span></button>
+                    <button class="city-btn" data-city="Milan" onclick="selectCity(this)"><span>⚡ Milano</span></button>
+                    <button class="city-btn" data-city="Naples" onclick="selectCity(this)"><span>🌋 Napoli</span></button>
+                    <button class="city-btn" data-city="Turin" onclick="selectCity(this)"><span>🏔️ Torino</span></button>
+                </div>
+
+                <div class="section-label">Ulaşım</div>
+                <div class="transport-grid">
+                    <button class="trans-btn active" onclick="setTransport(this, 'walk', 0, 5)"><i class="fas fa-walking"></i></button>
+                    <button class="trans-btn" onclick="setTransport(this, 'car', 1.8, 35)"><i class="fas fa-car"></i></button>
+                    <button class="trans-btn" onclick="setTransport(this, 'bus', 1.2, 22)"><i class="fas fa-bus"></i></button>
+                    <button class="trans-btn" onclick="setTransport(this, 'train', 2.5, 50)"><i class="fas fa-subway"></i></button>
+                </div>
+
+                <div id="results"></div>
+            </div>
+
+            <div id="airport-tab" class="tab-content">
+                <div id="airport-results"></div>
+            </div>
+        </div>
+    </div>
+    <div id="map"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+let map = L.map('map').setView([41.87, 12.57], 6);
+let currentTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+
+let markers = [];
+let routeLine = null;
+let selectedCity = "Rome";
+let currentTransport = { mode: 'walk', costPerKm: 0, speed: 5 };
+let isRainyGlobal = false;
+let isDarkMode = false;
+const BUDGET_LIMIT = 100;
+
+// Veri Seti
+const places = {
+    Rome: {
+        spots: [{name:"Colosseum",lat:41.8902,lon:12.4922,price:18,indoor:false},{name:"Trevi Fountain",lat:41.9009,lon:12.4833,price:0,indoor:false},{name:"Pantheon",lat:41.8986,lon:12.4768,price:5,indoor:true}],
+        food: {name:"Giolitti Gelato",lat:41.9001,lon:12.4776,price:6,desc:"Tarihi Roma Dondurmacısı"},
+        airport: {name: "Fiumicino (FCO)", options: [{mode: "Leonardo Express", time: "32 dk", price: "€14", icon: "fa-train"}, {mode: "Terravision Bus", time: "55 dk", price: "€6", icon: "fa-bus"}, {mode: "Taksi", time: "45 dk", price: "€50", icon: "fa-taxi"}]}
+    },
+    Florence: {
+        spots: [{name:"Duomo",lat:43.7731,lon:11.2560,price:15,indoor:true},{name:"Uffizi Gallery",lat:43.7687,lon:11.2550,price:20,indoor:true}],
+        food: {name:"All'Antico Vinaio",lat:43.7682,lon:11.2564,price:10,desc:"Sandviç Durağı"},
+        airport: {name: "Peretola (FLR)", options: [{mode: "Tramvay (T2)", time: "20 dk", price: "€1.5", icon: "fa-subway"}, {mode: "Shuttle Bus", time: "25 dk", price: "€6", icon: "fa-bus"}, {mode: "Taksi", time: "15 dk", price: "€25", icon: "fa-taxi"}]}
+    },
+    Venice: {
+        spots: [{name:"St Mark's Basilica",lat:45.4340,lon:12.3390,price:10,indoor:true},{name:"Doge Palace",lat:45.4337,lon:12.3400,price:20,indoor:true}],
+        food: {name:"Harry's Bar",lat:45.4326,lon:12.3376,price:15,desc:"Aperitif Durağı"},
+        airport: {name: "Marco Polo (VCE)", options: [{mode: "Alilaguna", time: "1s 15dk", price: "€15", icon: "fa-ship"}, {mode: "ATVO Bus", time: "20 dk", price: "€10", icon: "fa-bus"}, {mode: "Su Taksisi", time: "30 dk", price: "€120", icon: "fa-anchor"}]}
+    },
+    Milan: {
+        spots: [{name:"Duomo di Milano",lat:45.4642,lon:9.1916,price:15,indoor:true},{name:"Galleria",lat:45.4659,lon:9.1900,price:0,indoor:true}],
+        food: {name:"Luini Panzerotti",lat:45.4655,lon:9.1923,price:5,desc:"Panzerotti Durağı"},
+        airport: {name: "Malpensa (MXP)", options: [{mode: "Express Train", time: "50 dk", price: "€13", icon: "fa-train"}, {mode: "Bus Shuttle", time: "1 sa", price: "€10", icon: "fa-bus"}, {mode: "Taksi", time: "50 dk", price: "€100", icon: "fa-taxi"}]}
+    },
+    Naples: {
+        spots: [{name:"Pompeii",lat:40.7460,lon:14.4989,price:16,indoor:false},{name:"Museum",lat:40.8530,lon:14.2500,price:15,indoor:true}],
+        food: {name:"Da Michele Pizza",lat:40.8497,lon:14.2633,price:10,desc:"Pizza Durağı"},
+        airport: {name: "Capodichino (NAP)", options: [{mode: "Alibus", time: "20 dk", price: "€5", icon: "fa-bus"}, {mode: "Taksi", time: "15 dk", price: "€20", icon: "fa-taxi"}]}
+    },
+    Turin: {
+        spots: [{name:"Mole Antonelliana",lat:45.0687,lon:7.6930,price:15,indoor:true},{name:"Egyptian Museum",lat:45.0680,lon:7.6820,price:15,indoor:true}],
+        food: {name:"Caffè Bicerin",lat:45.0747,lon:7.6806,price:7,desc:"Kahve Durağı"},
+        airport: {name: "Torino (TRN)", options: [{mode: "Tren (SFM1)", time: "30 dk", price: "€3.7", icon: "fa-train"}, {mode: "Arriva Bus", time: "45 dk", price: "€7", icon: "fa-bus"}, {mode: "Taksi", time: "30 dk", price: "€35", icon: "fa-taxi"}]}
+    }
+};
+
+function switchTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    event.currentTarget.classList.add('active');
+}
+
+function toggleDarkMode() {
+    isDarkMode = !isDarkMode;
+    document.body.classList.toggle('dark-mode');
+    map.removeLayer(currentTiles);
+    const tileUrl = isDarkMode ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+    currentTiles = L.tileLayer(tileUrl).addTo(map);
+    document.getElementById('modeIcon').className = isDarkMode ? 'fas fa-sun' : 'fas fa-moon';
+}
+
+function updateWeatherUI(city, isRainy) {
+    const weatherInfo = document.getElementById('weatherInfo');
+    weatherInfo.innerHTML = isRainy ? `<i class="fas fa-cloud-showers-heavy"></i> <span>${city}: 12°C</span>` : `<i class="fas fa-sun" style="color:#f39c12"></i> <span>${city}: 24°C</span>`;
+}
+
+function generateRoute() {
+    markers.forEach(m => map.removeLayer(m));
+    markers = [];
+    if (routeLine) map.removeLayer(routeLine);
+    let cityData = places[selectedCity];
+    let routeItems = [...cityData.spots];
+    if (isRainyGlobal) routeItems.sort((a, b) => b.indoor - a.indoor);
+    routeItems.splice(Math.ceil(routeItems.length/2), 0, {...cityData.food, isFood: true});
+    let points = [];
+    let totalDist = 0;
+    let totalEntrance = 0;
+    routeItems.forEach((p, i) => {
+        totalEntrance += p.price || 0;
+        p.crowd = Math.floor(Math.random() * 80) + 10;
+        let color = p.isFood ? "#c5a45a" : (p.indoor ? "#2980b9" : "#2d8a52");
+        let iconHtml = `<div style="width:28px;height:28px;background:${color};border:3px solid white;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;">${p.isFood ? '🍴' : i+1}</div>`;
+        let marker = L.marker([p.lat, p.lon], {icon: L.divIcon({className: '', html: iconHtml})}).addTo(map);
+        markers.push(marker);
+        points.push([p.lat, p.lon]);
+        if(i > 0) totalDist += getDistance(routeItems[i-1].lat, routeItems[i-1].lon, p.lat, p.lon);
+    });
+    routeLine = L.polyline(points, { color: isRainyGlobal ? "#2980b9" : "#1a6b3c", weight: 5, dashArray: '10, 10' }).addTo(map);
+    map.fitBounds(routeLine.getBounds(), { padding: [80, 80] });
+    const transportCost = totalDist * currentTransport.costPerKm;
+    updateBudgetProgress(totalEntrance + transportCost);
+    showPlaces(routeItems, totalDist, transportCost);
+    showAirportInfo();
+}
+
+function showAirportInfo() {
+    const airportData = places[selectedCity].airport;
+    let html = `
+        <div class="airport-hero">
+            <p>Havalimanı Terminali</p>
+            <h3>${airportData.name}</h3>
+        </div>
+        <div class="section-label">Ulaşım Seçenekleri</div>
+    `;
+    airportData.options.forEach(opt => {
+        html += `
+            <div class="airport-card">
+                <div class="airport-icon-box"><i class="fas ${opt.icon}"></i></div>
+                <div class="airport-details">
+                    <h4>${opt.mode}</h4>
+                    <div class="airport-meta">
+                        <span><i class="fas fa-clock"></i> ${opt.time}</span>
+                        <span><i class="fas fa-map-marker-alt"></i> Merkeze</span>
+                    </div>
+                </div>
+                <div class="airport-price-tag">${opt.price}</div>
+            </div>`;
+    });
+    document.getElementById("airport-results").innerHTML = html;
+}
+
+function showPlaces(list, dist, transCost) {
+    let html = `<div style="background:rgba(197,164,90,0.1); padding:15px; border-radius:12px; margin-bottom:15px; font-size:13px;">Mesafe: <b>${dist.toFixed(1)} km</b></div>`;
+    list.forEach((p, i) => {
+        let crowdColor = p.crowd > 70 ? 'var(--danger)' : (p.crowd > 40 ? 'var(--oro)' : 'var(--verde)');
+        html += `<div class="place-card ${p.indoor ? "indoor" : ""} ${p.isFood ? "food-stop" : ""}">
+            <div class="card-name">${p.name}</div>
+            <div style="font-weight:bold; font-size:14px; color:var(--oro)">€${p.price}</div>
+            <div class="crowd-indicator">
+                <div class="crowd-text">Yoğunluk: %${p.crowd}</div>
+                <div class="crowd-bar-bg"><div class="crowd-bar-fill" style="width:${p.crowd}%; background:${crowdColor}"></div></div>
+            </div>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lon}" target="_blank" class="maps-link">Yol Tarifi</a>
+        </div>`;
+    });
+    document.getElementById("results").innerHTML = html;
+}
+
+function updateBudgetProgress(total) {
+    const bar = document.getElementById('budgetBar');
+    const label = document.getElementById('budgetLabel');
+    bar.style.width = Math.min((total / BUDGET_LIMIT) * 100, 100) + '%';
+    label.innerText = `€${total.toFixed(0)} / €${BUDGET_LIMIT}`;
+}
+
+function getDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2-lat1) * Math.PI / 180;
+    const dLon = (lon2-lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+    return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+}
+
+function selectCity(btn) {
+    document.querySelectorAll(".city-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    selectedCity = btn.dataset.city;
+    isRainyGlobal = Math.random() > 0.5;
+    updateWeatherUI(selectedCity, isRainyGlobal);
+    generateRoute();
+}
+
+function setTransport(btn, mode, cost, speed) {
+    document.querySelectorAll(".trans-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentTransport = { mode, costPerKm: cost, speed };
+    generateRoute();
+}
+
+window.onload = () => { selectCity(document.querySelector('.city-btn')); };
+</script>
+</body>
+</html>
