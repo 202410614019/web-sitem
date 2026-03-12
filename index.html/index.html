@@ -442,6 +442,167 @@
         .heat-gradient { height: 10px; width: 120px; border-radius: 5px; margin-top: 5px;
             background: linear-gradient(to right, #2ecc71, #f1c40f, #e74c3c); }
 
+/* ALIŞVERİŞ SEKMESİ */
+#btn-shopping i { color: #e91e8c; }
+#btn-shopping.active { color: #e91e8c; border-bottom-color: #e91e8c; background: #fff0f7; }
+
+.shopping-hero {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #e91e8c 100%);
+    padding: 22px; border-radius: 20px; color: white; margin-bottom: 20px;
+    box-shadow: 0 10px 30px rgba(233,30,140,0.3); position: relative; overflow: hidden;
+}
+.shopping-hero::before {
+    content: '🛍️'; position: absolute; right: -10px; top: -10px;
+    font-size: 80px; opacity: 0.15;
+}
+.shopping-hero h3 { font-family: 'Cormorant Garamond', serif; font-size: 22px; margin-bottom: 4px; }
+.shopping-hero p  { font-size: 11px; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px; }
+
+.shop-filter-row {
+    display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px;
+}
+.shop-filter-btn {
+    padding: 5px 12px; border-radius: 20px; border: 1px solid #e0e0e0;
+    background: white; font-size: 11px; font-weight: 700; cursor: pointer;
+    transition: 0.2s; color: #555;
+}
+.shop-filter-btn.active { background: #e91e8c; color: white; border-color: #e91e8c; }
+body.dark-mode .shop-filter-btn { background: #2d2d2d; border-color: #444; color: #ccc; }
+
+.shop-card {
+    background: white; border-radius: 16px; margin-bottom: 12px;
+    border: 1px solid #f0e0ea; overflow: hidden; transition: 0.25s;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+}
+body.dark-mode .shop-card { background: #2d2d2d; border-color: #444; }
+.shop-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(233,30,140,0.15); }
+
+.shop-card-header {
+    padding: 14px 16px 10px;
+    border-left: 4px solid #e91e8c;
+    display: flex; align-items: flex-start; gap: 10px;
+}
+.shop-card-header.outlet  { border-left-color: #e91e8c; }
+.shop-card-header.mall    { border-left-color: #9b59b6; }
+.shop-card-header.street  { border-left-color: #f39c12; }
+.shop-card-header.market  { border-left-color: #27ae60; }
+
+.shop-emoji { font-size: 28px; line-height: 1; }
+.shop-name  { font-family: 'Cormorant Garamond', serif; font-size: 17px; font-weight: 600; }
+.shop-district { font-size: 11px; color: var(--soft); margin-top: 2px; }
+.shop-type-badge {
+    margin-left: auto; padding: 3px 9px; border-radius: 10px;
+    font-size: 10px; font-weight: 700; white-space: nowrap;
+    background: #fff0f7; color: #e91e8c;
+}
+.shop-type-badge.mall   { background: #f5f0ff; color: #9b59b6; }
+.shop-type-badge.street { background: #fff9e6; color: #e67e22; }
+.shop-type-badge.market { background: #f0fff4; color: #27ae60; }
+
+.shop-card-body { padding: 0 16px 14px; }
+.shop-desc { font-size: 12px; color: #555; line-height: 1.5; margin-bottom: 10px; }
+body.dark-mode .shop-desc { color: #aaa; }
+
+.shop-meta-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+.shop-meta-pill {
+    background: #f8f8f8; border-radius: 8px; padding: 4px 9px;
+    font-size: 11px; color: #555; display: flex; align-items: center; gap: 4px;
+}
+body.dark-mode .shop-meta-pill { background: #3a3a3a; color: #ccc; }
+
+.shop-brands {
+    display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px;
+}
+.brand-tag {
+    background: linear-gradient(135deg, #fff0f7, #fce4f3);
+    border: 1px solid #f5c6e7; color: #c2185b;
+    font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 6px;
+}
+body.dark-mode .brand-tag { background: #3d1a2e; border-color: #5a2a40; color: #f48fb1; }
+
+.shop-tip {
+    background: #fff9e6; border-left: 3px solid #f39c12;
+    padding: 7px 10px; border-radius: 0 8px 8px 0;
+    font-size: 11px; color: #856404; margin-bottom: 8px;
+}
+body.dark-mode .shop-tip { background: #2d2510; color: #fbbf24; }
+
+.tax-free-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: #e8f5e9; color: #2e7d32;
+    font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 8px;
+}
+
+.shop-actions { display: flex; gap: 6px; margin-top: 10px; }
+.shop-map-btn {
+    flex: 1; padding: 7px; border-radius: 10px; border: 1px solid #e0e0e0;
+    background: white; font-size: 11px; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    transition: 0.2s; color: #555; text-decoration: none;
+}
+.shop-map-btn:hover { background: #4285F4; color: white; border-color: #4285F4; }
+.shop-detail-btn {
+    flex: 1; padding: 7px; border-radius: 10px; border: none;
+    background: #e91e8c; color: white; font-size: 11px; font-weight: 700;
+    cursor: pointer; transition: 0.2s;
+}
+.shop-detail-btn:hover { background: #c2185b; }
+
+/* TAX FREE BÖLÜMÜ */
+.taxfree-hero {
+    background: linear-gradient(135deg, #1a237e, #283593);
+    border-radius: 16px; padding: 18px; margin: 20px 0 14px; color: white;
+    position: relative; overflow: hidden;
+}
+.taxfree-hero::after {
+    content: '%'; position: absolute; right: 10px; top: -10px;
+    font-size: 90px; font-weight: 900; opacity: 0.08;
+}
+.taxfree-hero h4 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+.taxfree-hero p  { font-size: 11px; opacity: 0.8; }
+
+.taxfree-steps { counter-reset: step; }
+.taxfree-step {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 10px 0; border-bottom: 1px solid #f0f0f0;
+    font-size: 12px; line-height: 1.5; color: #444;
+}
+body.dark-mode .taxfree-step { border-bottom-color: #3a3a3a; color: #ccc; }
+.taxfree-step:last-child { border-bottom: none; }
+.step-num {
+    min-width: 24px; height: 24px; border-radius: 50%;
+    background: #1a237e; color: white; font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+}
+.taxfree-tips-grid { display: grid; grid-template-columns: 1fr; gap: 6px; margin-top: 10px; }
+.taxfree-tip-item {
+    background: #f0f4ff; border-radius: 10px; padding: 9px 12px;
+    font-size: 11px; color: #1a237e; line-height: 1.4;
+    border-left: 3px solid #3f51b5;
+}
+body.dark-mode .taxfree-tip-item { background: #1a1f3d; color: #9fa8da; }
+
+.refund-calc {
+    background: linear-gradient(135deg, #f3e5f5, #e8eaf6);
+    border-radius: 14px; padding: 16px; margin: 14px 0;
+}
+body.dark-mode .refund-calc { background: #2a1f3d; }
+.refund-calc h5 { font-size: 13px; font-weight: 700; color: #4a148c; margin-bottom: 10px; }
+body.dark-mode .refund-calc h5 { color: #ce93d8; }
+.refund-input-row { display: flex; gap: 8px; align-items: center; }
+.refund-input {
+    flex: 1; padding: 10px; border: 1px solid #d1b3e0; border-radius: 10px;
+    font-size: 16px; font-weight: 700; text-align: center; outline: none;
+    font-family: 'DM Sans', sans-serif; background: white;
+}
+.refund-result {
+    margin-top: 10px; padding: 10px; background: white; border-radius: 10px;
+    display: flex; justify-content: space-between; align-items: center;
+}
+body.dark-mode .refund-result { background: #1a1a2e; }
+.refund-amount { font-size: 22px; font-weight: 700; color: #27ae60; }
+.refund-note { font-size: 10px; color: var(--soft); }
+
     </style>
 </head>
 <body>
@@ -548,6 +709,10 @@
                 <i class="fas fa-bell"></i>
                 <span class="tab-label">Alarm</span>
             </button>
+            <button class="tab-btn" id="btn-shopping" onclick="switchTab('shopping-tab')">
+    <i class="fas fa-shopping-bag"></i>
+    <span class="tab-label">Alışveriş</span>
+</button>
         </div>
 
         <div class="sidebar-scroll">
@@ -672,6 +837,69 @@
                 <div class="section-label">Kayıtlı Hatırlatıcılar</div>
                 <div id="reminder-list"></div>
             </div>
+            <div id="shopping-tab" class="tab-content">
+
+    <div class="shopping-hero">
+        <h3>🛍️ Alışveriş Rehberi</h3>
+        <p>Outlet · Lüks Cadde · Tax Free İade</p>
+    </div>
+
+    <!-- Şehir filtresi (mevcut city butonlarıyla senkron) -->
+    <div class="shop-filter-row" id="shop-type-filters">
+        <button class="shop-filter-btn active" onclick="filterShops('all', this)">Tümü</button>
+        <button class="shop-filter-btn" onclick="filterShops('outlet', this)">🏬 Outlet</button>
+        <button class="shop-filter-btn" onclick="filterShops('mall', this)">🏪 AVM</button>
+        <button class="shop-filter-btn" onclick="filterShops('street', this)">👠 Cadde</button>
+        <button class="shop-filter-btn" onclick="filterShops('market', this)">🥬 Pazar</button>
+    </div>
+
+    <div id="shop-list">
+        <div style="text-align:center;padding:30px;color:#999;">Yükleniyor...</div>
+    </div>
+
+    <!-- TAX FREE HESAPLAYICI -->
+    <div class="refund-calc">
+        <h5>💶 Tax Free İade Hesaplama</h5>
+        <div class="refund-input-row">
+            <span style="font-weight:700;font-size:16px;">€</span>
+            <input class="refund-input" id="refundInput" type="number" 
+                   placeholder="Harcama tutarı" oninput="calcRefund(this.value)">
+        </div>
+        <div class="refund-result" id="refundResult" style="display:none;">
+            <div>
+                <div class="refund-note">Tahmini iade (Min €154 gerekli)</div>
+                <div class="refund-amount" id="refundAmount">€0</div>
+            </div>
+            <div style="text-align:right;">
+                <div class="refund-note">Oran: %12</div>
+                <div style="font-size:11px;color:#e91e8c;font-weight:700;" id="refundNote"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAX FREE ADIMLAR -->
+    <div class="taxfree-hero">
+        <h4>🛂 Tax Free Nasıl Yapılır?</h4>
+        <p>Adım adım iade süreci</p>
+    </div>
+
+    <div class="taxfree-steps" id="taxfree-steps">
+        <div style="text-align:center;padding:20px;color:#999;">Yükleniyor...</div>
+    </div>
+
+    <div style="margin-top:16px;">
+        <div class="section-label">💡 Önemli İpuçları</div>
+        <div class="taxfree-tips-grid" id="taxfree-tips"></div>
+    </div>
+
+    <!-- Havalimanı tax free ofisleri -->
+    <div style="margin-top:16px;padding:14px;background:#e8f5e9;border-radius:14px;">
+        <div style="font-weight:700;font-size:13px;color:#1b5e20;margin-bottom:8px;">
+            ✈️ Tax Free Ofisi Olan Havalimanları
+        </div>
+        <div id="taxfree-airports" style="font-size:12px;color:#2e7d32;line-height:1.8;"></div>
+    </div>
+</div>
 
         </div><!-- /sidebar-scroll -->
     </div><!-- /sidebar -->
@@ -1308,12 +1536,11 @@ function showToast(msg) {
 
 // ==================== DÖVİZ ====================
 const rates = {
-    EUR: { USD: 1.08, TRY: 35.2, GBP: 0.86, EUR: 1 },
-    USD: { EUR: 0.93, TRY: 32.6, GBP: 0.80, USD: 1 },
-    TRY: { EUR: 0.0284, USD: 0.0307, GBP: 0.0228, TRY: 1 },
-    GBP: { EUR: 1.16, USD: 1.25, TRY: 43.5, GBP: 1 }
+    EUR: { USD: 1.156, TRY: 51.1,  GBP: 0.865, EUR: 1 },
+    USD: { EUR: 0.865, TRY: 44.09, GBP: 0.749, USD: 1 },
+    TRY: { EUR: 0.0196, USD: 0.0227, GBP: 0.0170, TRY: 1 },
+    GBP: { EUR: 1.156, USD: 1.338, TRY: 58.98, GBP: 1 }
 };
-
 const currencyInfo = {
     EUR: { flag: '🇪🇺', name: 'Euro', symbol: '€' },
     USD: { flag: '🇺🇸', name: 'Amerikan Doları', symbol: '$' },
@@ -1800,6 +2027,160 @@ async function showEvDetail(id) {
     document.body.appendChild(d);
 }
 
+
+
+</script>
+<script id="shopping-js">
+
+// ─── ALIŞVERİŞ ───────────────────────────────────────────────
+var activeShopType = 'all';
+var allShops = [];
+
+async function loadShopping() {
+    var cityMap = {
+    'Rome':'Roma', 'Florence':'Floransa', 'Venice':'Venedik',
+    'Milan':'Milano', 'Naples':'Napoli', 'Turin':'Torino'
+};
+var city = cityMap[selectedCity] || selectedCity || 'Roma';
+    var listEl = document.getElementById('shop-list');
+    if (!listEl) return;
+    listEl.innerHTML = '<div style="text-align:center;padding:30px;color:#999;">Yükleniyor...</div>';
+
+    var url = '/shopping?city=' + encodeURIComponent(city);
+    var data = await apiFetch(url);
+    if (!data || !data.length) {
+        listEl.innerHTML = '<div style="text-align:center;padding:30px;color:#999;">Bu şehir için alışveriş noktası bulunamadı.</div>';
+        return;
+    }
+    allShops = data;
+    renderShops();
+}
+
+function renderShops() {
+    var listEl = document.getElementById('shop-list');
+    if (!listEl) return;
+    var filtered = activeShopType === 'all' ? allShops : allShops.filter(function(s){ return s.type === activeShopType; });
+
+    if (!filtered.length) {
+        listEl.innerHTML = '<div style="text-align:center;padding:20px;color:#999;">Bu kategoride sonuç yok.</div>';
+        return;
+    }
+
+    var html = '';
+    filtered.forEach(function(s) {
+        var typeLabel = { outlet:'Outlet', mall:'AVM', street:'Lüks Cadde', market:'Pazar' }[s.type] || s.type;
+        var brands = (s.brands||[]).slice(0,5).map(function(b){ return '<span class="brand-tag">'+b+'</span>'; }).join('');
+        var mapsUrl = 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(s.name+' '+s.address);
+
+        html += '<div class="shop-card">';
+        html += '<div class="shop-card-header '+s.type+'">';
+        html += '<span class="shop-emoji">'+(s.emoji||'🛍️')+'</span>';
+        html += '<div style="flex:1">';
+        html += '<div class="shop-name">'+s.name+'</div>';
+        html += '<div class="shop-district">📍 '+s.district+'</div>';
+        html += '</div>';
+        html += '<span class="shop-type-badge '+(s.type==='mall'?'mall':s.type==='street'?'street':s.type==='market'?'market':'')+'">'+typeLabel+'</span>';
+        html += '</div>';
+        html += '<div class="shop-card-body">';
+        html += '<div class="shop-desc">'+s.description+'</div>';
+
+        html += '<div class="shop-meta-row">';
+        html += '<span class="shop-meta-pill">🕐 '+s.open_hours+'</span>';
+        html += '<span class="shop-meta-pill">'+s.price_range+'</span>';
+        if (s.tax_free) html += '<span class="tax-free-badge">✅ Tax Free</span>';
+        html += '</div>';
+
+        if (brands) html += '<div class="shop-brands">'+brands+'</div>';
+        if (s.tip) html += '<div class="shop-tip">💡 '+s.tip+'</div>';
+
+        html += '<div class="shop-actions">';
+        html += '<a class="shop-map-btn" href="'+mapsUrl+'" target="_blank"><i class="fas fa-map-marker-alt"></i> Haritada Gör</a>';
+        if (s.website) html += '<a class="shop-map-btn" href="'+s.website+'" target="_blank" style="color:#e91e8c;border-color:#e91e8c;"><i class="fas fa-globe"></i> Web Site</a>';
+        html += '</div>';
+        html += '</div></div>';
+    });
+    listEl.innerHTML = html;
+}
+
+function filterShops(type, btn) {
+    activeShopType = type;
+    document.querySelectorAll('.shop-filter-btn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    renderShops();
+}
+
+// Tax Free hesaplayıcı
+function calcRefund(val) {
+    var amount = parseFloat(val) || 0;
+    var resultEl = document.getElementById('refundResult');
+    var amountEl = document.getElementById('refundAmount');
+    var noteEl   = document.getElementById('refundNote');
+    if (!resultEl) return;
+
+    if (amount < 154) {
+        resultEl.style.display = 'flex';
+        amountEl.textContent = '—';
+        amountEl.style.color = '#e74c3c';
+        noteEl.textContent = 'Min €154 gerekli';
+        return;
+    }
+    // Kademeli oran
+    var rate = amount < 500 ? 0.11 : amount < 1000 ? 0.12 : 0.15;
+    var refund = (amount * rate).toFixed(2);
+    resultEl.style.display = 'flex';
+    amountEl.textContent = '€' + refund;
+    amountEl.style.color = '#27ae60';
+    noteEl.textContent = 'Oran: %' + (rate*100);
+}
+
+// Tax Free adımlarını yükle
+async function loadTaxFree() {
+    var data = await apiFetch('/taxfree');
+    if (!data) return;
+
+    var stepsEl = document.getElementById('taxfree-steps');
+    var tipsEl  = document.getElementById('taxfree-tips');
+    var airEl   = document.getElementById('taxfree-airports');
+
+    if (stepsEl && data.steps) {
+        stepsEl.innerHTML = data.steps.map(function(s, i) {
+            return '<div class="taxfree-step">'
+                + '<div class="step-num">'+(i+1)+'</div>'
+                + '<div>'+s.replace(/^\d+\.\s*/, '')+'</div>'
+                + '</div>';
+        }).join('');
+    }
+    if (tipsEl && data.tips) {
+        tipsEl.innerHTML = data.tips.map(function(t) {
+            return '<div class="taxfree-tip-item">💙 '+t+'</div>';
+        }).join('');
+    }
+    if (airEl && data.airports) {
+        airEl.innerHTML = data.airports.map(function(a) {
+            return '✈️ '+a+'<br>';
+        }).join('');
+    }
+}
+
+// Shopping sekmesi açılınca yükle
+var origSwitchTab = window.switchTab;
+window.switchTab = function(tabId) {
+    origSwitchTab(tabId);
+    if (tabId === 'shopping-tab') {
+        loadShopping();
+        loadTaxFree();
+    }
+};
+
+// Şehir değişince shopping'i de güncelle
+var origSelectCity = window.selectCity;
+window.selectCity = function(btn) {
+    origSelectCity(btn);
+    var shopTab = document.getElementById('shopping-tab');
+    if (shopTab && shopTab.classList.contains('active')) {
+        loadShopping();
+    }
+};
 </script>
 <!-- MEKAN DETAY PANELİ OVERLAY -->
 <div class="place-detail-overlay" id="placeDetailOverlay" onclick="closePlaceDetail(event)">
