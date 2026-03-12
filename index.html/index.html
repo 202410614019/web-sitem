@@ -6,7 +6,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 
     <style>
         :root {
@@ -18,37 +18,114 @@
             --danger: #d9534f;
             --shadow: 0 12px 30px rgba(0,0,0,0.08);
             --shadow-hover: 0 18px 40px rgba(0,0,0,0.15);
+            --info-blue: #3498db;
+            --info-blue-hover: #2980b9;
         }
 
-        /* Temel ayarlar değişmedi */
         * { margin:0; padding:0; box-sizing:border-box; }
+        html,body{height:100%;}
         body { font-family: 'DM Sans', sans-serif; background: #f8f5ef; color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; transition: 0.3s ease; }
         
         body.dark-mode { background: #1a1a1a; color: #f8f5ef; }
         body.dark-mode header { background: rgba(30, 30, 30, 0.9); border-bottom-color: #333; }
         body.dark-mode .sidebar { background: #222; border-right-color: #333; }
-        body.dark-mode .place-card, body.dark-mode .airport-card { background: #2d2d2d; border-color: #444; }
+        body.dark-mode .place-card, body.dark-mode .airport-card, body.dark-mode .warning-card { background: #2d2d2d; border-color: #444; }
         body.dark-mode .city-btn { background: #2d2d2d; border-color: #444; color: #eee; }
         body.dark-mode .trans-btn { background: #2d2d2d; border-color: #444; }
-        body.dark-mode .weather-display, body.dark-mode .mode-toggle { background: #2d2d2d; border-color: #444; color: #eee; }
+        body.dark-mode .weather-display, body.dark-mode .mode-toggle, body.dark-mode .attention-btn { background: #2d2d2d; border-color: #444; color: #eee; }
 
         header { 
             height: 70px; display: flex; align-items: center; justify-content: space-between; padding: 0 32px; 
             background: rgba(255,255,255,0.8); backdrop-filter: blur(14px); border-bottom: 1px solid var(--bordo); z-index: 2000; 
         }
 
-        .budget-wrapper { flex: 1; max-width: 250px; margin: 0 20px; }
+        .brand-text h1 { display: flex; align-items: center; gap: 8px; font-size: 22px; }
+        .t-green { color: #008C45; }
+        .t-white { color: #888; }
+        .t-red { color: #CD212A; }
+        
+        .info-i {
+            width: 20px; height: 20px;
+            background-color: var(--info-blue);
+            border-radius: 50%;
+            display: inline-flex; align-items: center; justify-content: center;
+            font-size: 13px; font-weight: bold; font-style: italic;
+            font-family: 'Times New Roman', Times, serif;
+            color: white;
+            cursor: pointer; transition: 0.3s;
+            position: relative; top: -1px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .info-i:hover { background-color: var(--info-blue-hover); transform: scale(1.1); }
+
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); z-index: 9999;
+            align-items: center; justify-content: center;
+        }
+        .modal-content {
+            background: white; width: 90%; max-width: 500px; border-radius: 20px;
+            padding: 30px; box-shadow: var(--shadow-hover); position: relative; animation: slideIn 0.3s ease;
+        }
+        @keyframes slideIn { from { transform: translateY(-20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        
+        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: var(--soft); }
+        .modal-tabs { display: flex; gap: 15px; border-bottom: 1px solid #eee; margin-bottom: 20px; }
+        .modal-tab-btn { padding: 10px 0; border: none; background: none; font-weight: bold; color: var(--soft); cursor: pointer; border-bottom: 2px solid transparent; }
+        .modal-tab-btn.active { color: var(--verde); border-bottom-color: var(--verde); }
+        .tab-pane { display: none; line-height: 1.6; font-size: 14px; }
+        .tab-pane.active { display: block; }
+
+        .budget-wrapper { flex: 1; max-width: 200px; margin: 0 15px; }
         .budget-info { display: flex; justify-content: space-between; font-size: 11px; font-weight: bold; margin-bottom: 5px; color: var(--soft); }
         .budget-bar-bg { background: #e0e0e0; height: 6px; border-radius: 10px; overflow: hidden; }
         .budget-bar-fill { height: 100%; width: 0%; background: var(--verde); transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .budget-bar-fill.danger { background: var(--danger); }
 
-        .main-container { flex: 1; display: flex; overflow: hidden; }
+        .attention-btn {
+            padding: 8px 15px; border-radius: 12px; border: 1px solid #ffcc00; 
+            background: #fff9e6; color: #856404; font-size: 12px; font-weight: bold;
+            cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s;
+        }
+        .attention-btn:hover { background: #ffcc00; color: white; }
+
+        .main-container { flex: 1; display: flex; overflow: hidden; min-height:0; }
         .sidebar { width: 420px; background: white; border-right: 1px solid var(--bordo); display: flex; flex-direction: column; box-shadow: var(--shadow); }
         
-        .sidebar-tabs { display: flex; border-bottom: 1px solid var(--bordo); background: #fafafa; }
-        .tab-btn { flex: 1; padding: 15px; border: none; background: none; font-size: 12px; font-weight: bold; color: var(--soft); cursor: pointer; transition: 0.3s; text-transform: uppercase; letter-spacing: 1px; }
-        .tab-btn.active { color: var(--verde); border-bottom: 2px solid var(--verde); background: white; }
+        .sidebar-tabs { 
+            display: grid; 
+            grid-template-columns: repeat(8, 1fr);
+            border-bottom: 1px solid var(--bordo); 
+            background: #fafafa; 
+        }
+        body.dark-mode .sidebar-tabs { background: #1e1e1e; }
+        .tab-btn { 
+            padding: 10px 4px 8px; border: none; background: none; font-size: 9px; 
+            font-weight: 700; color: var(--soft); cursor: pointer; transition: 0.25s; 
+            text-transform: uppercase; letter-spacing: 0.3px; display: flex; flex-direction: column; 
+            align-items: center; gap: 5px; border-bottom: 3px solid transparent;
+            line-height: 1.1;
+        }
+        .tab-btn span.tab-label { display: block; font-size: 8.5px; }
+        .tab-btn i { font-size: 14px; }
+        .tab-btn:hover { background: rgba(0,0,0,0.03); }
+
+        /* Her sekme kendi rengiyle aktif */
+        #btn-route.active       { color: #1a6b3c; border-bottom-color: #1a6b3c; background: #f0f9f4; }
+        #btn-airport.active     { color: #2980b9; border-bottom-color: #2980b9; background: #f0f6fb; }
+        #btn-stay.active        { color: #16a085; border-bottom-color: #16a085; background: #f0faf8; }
+        #btn-attention.active   { color: #e67e22; border-bottom-color: #e67e22; background: #fef9f0; }
+        #btn-events.active      { color: #8e44ad; border-bottom-color: #8e44ad; background: #f8f0fb; }
+        #btn-currency.active    { color: #c5a45a; border-bottom-color: #c5a45a; background: #fdf9f0; }
+        #btn-favorites.active   { color: #f39c12; border-bottom-color: #f39c12; background: #fefaf0; }
+
+        /* İkon renkleri her zaman görünür */
+        #btn-route i       { color: #1a6b3c; }
+        #btn-airport i     { color: #2980b9; }
+        #btn-stay i        { color: #16a085; }
+        #btn-attention i   { color: #e67e22; }
+        #btn-events i      { color: #8e44ad; }
+        #btn-currency i    { color: #c5a45a; }
+        #btn-favorites i   { color: #f39c12; }
 
         .sidebar-scroll { flex: 1; overflow-y: auto; padding: 24px; }
         .tab-content { display: none; }
@@ -73,53 +150,41 @@
 
         .transport-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 20px; }
         .trans-btn { 
-            padding: 12px; border: 1px solid var(--bordo); background: white; border-radius: 12px; 
-            cursor: pointer; transition: 0.3s; color: var(--soft); display: flex; flex-direction: column; align-items: center; gap: 4px;
+            padding: 10px 6px; border: 1px solid var(--bordo); background: white; border-radius: 12px; 
+            cursor: pointer; transition: 0.3s; color: var(--soft); display: flex; flex-direction: column; align-items: center; gap: 3px;
         }
         .trans-btn.active { background: var(--verde); color: white; border-color: var(--verde); }
+        .trans-label { font-size: 10px; font-weight: 700; letter-spacing: 0.3px; }
+        .trans-price { font-size: 9px; opacity: 0.8; }
+        .trans-btn.active .trans-price { opacity: 0.9; }
+        #transport-summary { 
+            background: #f0f7f4; border: 1px solid var(--verde); border-radius: 12px; 
+            padding: 11px 15px; margin-bottom: 15px; font-size: 13px; display: none;
+        }
 
-        .place-card { 
+        .place-card, .warning-card { 
             background: white; border-radius: 14px; border: 1px solid var(--bordo); 
             padding: 16px; margin-bottom: 12px; position: relative; transition: .25s; box-shadow: 0 4px 10px rgba(0,0,0,0.03);
         }
         .place-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 5px; background: var(--verde); border-radius: 10px 0 0 10px; }
         .place-card.indoor::before { background: #2980b9; }
         .place-card.food-stop::before { background: var(--oro); }
+        .place-card.hotel-card::before { background: #16a085; }
+        .place-card.airbnb-card::before { background: var(--oro); }
 
-        /* YENİ HAVALİMANI TASARIMI */
+        .warning-card { border-left: 5px solid #ffcc00; }
+        .warning-card i { color: #ffcc00; margin-right: 8px; }
+        .warning-title { font-weight: bold; margin-bottom: 5px; display: flex; align-items: center; }
+
         .airport-hero {
             background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
             padding: 20px; border-radius: 20px; color: white; margin-bottom: 25px;
             position: relative; overflow: hidden; box-shadow: 0 10px 20px rgba(0,0,0,0.2);
         }
-        .airport-hero::after {
-            content: "\f5b0"; font-family: "Font Awesome 5 Free"; font-weight: 900;
-            position: absolute; right: -20px; bottom: -20px; font-size: 100px; opacity: 0.1;
-        }
         .airport-hero h3 { font-family: 'Cormorant Garamond', serif; font-size: 24px; margin-bottom: 5px; }
         .airport-hero p { font-size: 12px; opacity: 0.9; text-transform: uppercase; letter-spacing: 1px; }
 
-        .airport-card { 
-            background: white; border-radius: 18px; border: 1px solid var(--bordo); 
-            padding: 20px; margin-bottom: 15px; transition: .3s; display: flex; align-items: center; gap: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-        }
-        .airport-card:hover { transform: scale(1.02); box-shadow: var(--shadow-hover); border-color: var(--oro); }
-        
-        .airport-icon-box {
-            width: 50px; height: 50px; background: #f0f4ff; border-radius: 12px;
-            display: flex; align-items: center; justify-content: center; font-size: 20px; color: #1a2a6c;
-        }
-        .airport-details { flex: 1; }
-        .airport-details h4 { font-size: 16px; font-weight: 600; margin-bottom: 4px; color: var(--text); }
-        .airport-meta { display: flex; gap: 15px; font-size: 12px; color: var(--soft); }
-        .airport-price-tag {
-            background: var(--verde); color: white; padding: 6px 12px; border-radius: 10px;
-            font-size: 13px; font-weight: bold;
-        }
-        
         .card-name { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 600; }
-        
         .crowd-indicator { margin-top: 8px; }
         .crowd-bar-bg { background: #eee; height: 4px; border-radius: 4px; margin: 4px 0; overflow: hidden; }
         .crowd-bar-fill { height: 100%; transition: 0.5s; }
@@ -137,13 +202,287 @@
             padding: 8px 20px; border-radius: 30px; font-size: 13px; border: 1px solid var(--bordo); 
             background: white; display: flex; align-items: center; gap: 8px; cursor: pointer;
         }
+
+        .park-legend { display: flex; flex-direction: column; gap: 5px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ccc; }
+        .legend-item { display: flex; align-items: center; gap: 8px; font-size: 11px; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; }
+
+        /* Konaklama hero */
+        .stay-hero {
+            background: linear-gradient(135deg, #16a085, #2c3e50);
+            padding: 20px; border-radius: 20px; color: white; margin-bottom: 25px;
+            box-shadow: 0 10px 20px rgba(22, 160, 133, 0.3);
+        }
+        .stay-hero h3 { font-family: 'Cormorant Garamond', serif; font-size: 24px; margin-bottom: 5px; }
+        .stay-hero p { font-size: 12px; opacity: 0.9; text-transform: uppercase; letter-spacing: 1px; }
+
+        .price-tag { font-weight: bold; font-size: 15px; margin-top: 4px; }
+        .price-tag.hotel-price { color: #16a085; }
+        .price-tag.airbnb-price { color: var(--oro); }
+
+        /* ARAMA ÇUBUĞU */
+        .search-bar-wrap { position: relative; margin-bottom: 16px; }
+        .search-bar-wrap i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--soft); font-size: 13px; }
+        .search-input {
+            width: 100%; padding: 10px 12px 10px 34px; border: 1px solid var(--bordo);
+            border-radius: 12px; font-size: 13px; background: white; outline: none;
+            transition: 0.2s; font-family: 'DM Sans', sans-serif;
+        }
+        .search-input:focus { border-color: var(--verde); box-shadow: 0 0 0 3px rgba(26,107,60,0.1); }
+        body.dark-mode .search-input { background: #2d2d2d; border-color: #444; color: #eee; }
+
+        /* FAVORİ BUTONU */
+        .fav-btn {
+            position: absolute; top: 12px; right: 12px;
+            background: none; border: none; cursor: pointer; font-size: 18px;
+            color: #ccc; transition: 0.2s; z-index: 2;
+        }
+        .fav-btn.active { color: #f1c40f; }
+        .fav-badge {
+            position: absolute; top: -5px; right: -5px; background: #f1c40f;
+            color: #333; border-radius: 50%; width: 16px; height: 16px;
+            font-size: 9px; font-weight: bold; display: flex; align-items: center; justify-content: center;
+        }
+
+        /* DÖVİZ SEKMESİ */
+        .currency-hero {
+            background: linear-gradient(135deg, #1a6b3c, #c5a45a);
+            padding: 20px; border-radius: 20px; color: white; margin-bottom: 20px;
+            box-shadow: 0 8px 20px rgba(26,107,60,0.25);
+        }
+        .currency-hero h3 { font-family: 'Cormorant Garamond', serif; font-size: 24px; }
+        .currency-hero p { font-size: 11px; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px; }
+        .currency-input-row { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
+        .currency-input {
+            flex: 1; padding: 12px 14px; border: 1px solid var(--bordo); border-radius: 12px;
+            font-size: 18px; font-weight: bold; text-align: center; outline: none;
+            font-family: 'DM Sans', sans-serif; transition: 0.2s;
+        }
+        .currency-input:focus { border-color: var(--verde); box-shadow: 0 0 0 3px rgba(26,107,60,0.1); }
+        body.dark-mode .currency-input { background: #2d2d2d; border-color: #444; color: #eee; }
+        .currency-select {
+            padding: 10px 8px; border: 1px solid var(--bordo); border-radius: 12px;
+            font-size: 13px; font-weight: bold; background: white; cursor: pointer; outline: none;
+            font-family: 'DM Sans', sans-serif;
+        }
+        body.dark-mode .currency-select { background: #2d2d2d; border-color: #444; color: #eee; }
+        .currency-result-card {
+            border-radius: 14px; border: 1px solid var(--bordo); padding: 16px;
+            margin-bottom: 10px; display: flex; align-items: center; gap: 14px;
+            background: white; transition: 0.2s;
+        }
+        body.dark-mode .currency-result-card { background: #2d2d2d; border-color: #444; }
+        .currency-result-card:hover { box-shadow: var(--shadow); }
+        .currency-flag { font-size: 28px; }
+        .currency-result-value { font-size: 22px; font-weight: 700; }
+        .currency-result-label { font-size: 11px; color: var(--soft); }
+        .rate-note { font-size: 10px; color: var(--soft); text-align: center; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ddd; }
+
+        /* FAVORİLER SEKMESİ */
+        .fav-hero {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+            padding: 20px; border-radius: 20px; color: white; margin-bottom: 20px;
+        }
+        .fav-hero h3 { font-family: 'Cormorant Garamond', serif; font-size: 24px; }
+        .empty-fav { text-align: center; padding: 40px 20px; color: var(--soft); }
+        .empty-fav i { font-size: 48px; opacity: 0.2; margin-bottom: 12px; display: block; }
+        .fav-item { 
+            background: white; border-radius: 14px; border: 1px solid var(--bordo);
+            padding: 14px 16px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px;
+            position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        body.dark-mode .fav-item { background: #2d2d2d; border-color: #444; }
+        .fav-remove { 
+            margin-left: auto; background: none; border: none; cursor: pointer;
+            color: #ccc; font-size: 16px; transition: 0.2s; padding: 4px;
+        }
+        .fav-remove:hover { color: var(--danger); }
+        #btn-favorites { position: relative; }
+        /* MEKAN DETAY PANELİ */
+        .place-detail-overlay {
+            display: none;
+            position: fixed; inset: 0; z-index: 8000;
+            background: rgba(0,0,0,0.55); backdrop-filter: blur(6px);
+            align-items: flex-end; justify-content: center;
+        }
+        .place-detail-overlay.open { display: flex; }
+        .place-detail-panel {
+            background: white; width: 100%; max-width: 460px;
+            border-radius: 24px 24px 0 0; overflow: hidden;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.25);
+            animation: slideUpPanel 0.35s cubic-bezier(0.34,1.56,0.64,1);
+            max-height: 88vh; display: flex; flex-direction: column;
+        }
+        body.dark-mode .place-detail-panel { background: #1e1e1e; color: #eee; }
+        @keyframes slideUpPanel {
+            from { transform: translateY(100%); opacity: 0; }
+            to   { transform: translateY(0);    opacity: 1; }
+        }
+        .place-detail-img {
+            width: 100%; height: 200px; object-fit: cover;
+            display: block; flex-shrink: 0;
+        }
+        .place-detail-img-placeholder {
+            width: 100%; height: 200px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 64px; background: linear-gradient(135deg,#f8f5ef,#e6dfd3);
+        }
+        .place-detail-body { padding: 20px 22px 28px; overflow-y: auto; flex: 1; }
+        .place-detail-close {
+            position: absolute; top: 14px; right: 16px; z-index: 8100;
+            width: 32px; height: 32px; border-radius: 50%; border: none;
+            background: rgba(0,0,0,0.45); color: white; font-size: 18px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: 0.2s; backdrop-filter: blur(4px);
+        }
+        .place-detail-close:hover { background: rgba(0,0,0,0.7); transform: scale(1.1); }
+        .place-detail-title { font-family: 'Cormorant Garamond',serif; font-size: 26px; font-weight: 600; margin-bottom: 4px; }
+        .place-detail-meta { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+        .detail-badge {
+            padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .place-detail-desc { font-size: 13px; line-height: 1.7; color: #444; margin-bottom: 18px; }
+        body.dark-mode .place-detail-desc { color: #bbb; }
+        .detail-actions { display: flex; gap: 10px; }
+        .detail-go-btn {
+            flex: 1; padding: 13px; background: var(--verde); color: white;
+            border: none; border-radius: 14px; font-size: 14px; font-weight: 700;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+            transition: 0.2s; text-decoration: none;
+        }
+        .detail-go-btn:hover { background: #145530; transform: translateY(-1px); }
+        .detail-maps-btn {
+            padding: 13px 18px; background: #f0f0f0; color: #333;
+            border: none; border-radius: 14px; font-size: 13px; font-weight: 700;
+            cursor: pointer; display: flex; align-items: center; gap: 7px;
+            transition: 0.2s; text-decoration: none;
+        }
+        .detail-maps-btn:hover { background: #4285F4; color: white; }
+        body.dark-mode .detail-maps-btn { background: #333; color: #eee; }
+        .place-card { cursor: pointer; }
+        .place-card:hover { transform: translateX(5px); box-shadow: var(--shadow-hover); }
+
+        #btn-reminder.active    { color: #e74c3c; border-bottom-color: #e74c3c; background: #fff5f5; }
+        #btn-reminder i         { color: #e74c3c; }
+
+        /* DİL BUTONU - header */
+        .lang-btn {
+            padding: 7px 14px; border-radius: 30px; font-size: 12px; font-weight: 700;
+            border: 1px solid var(--bordo); background: white; cursor: pointer;
+            display: flex; align-items: center; gap: 6px; transition: 0.2s; color: var(--text);
+        }
+        .lang-btn:hover { background: var(--bordo); }
+        body.dark-mode .lang-btn { background: #2d2d2d; border-color: #444; color: #eee; }
+
+        /* ISI HARİTASI toggle */
+        .heatmap-btn {
+            position: absolute; bottom: 20px; right: 20px; z-index: 500;
+            background: white; border: none; border-radius: 12px; padding: 10px 16px;
+            font-size: 12px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            display: flex; align-items: center; gap: 8px; transition: 0.3s; color: var(--text);
+        }
+        .heatmap-btn.active { background: #e74c3c; color: white; }
+        body.dark-mode .heatmap-btn { background: #2d2d2d; color: #eee; }
+
+        /* HARİTA ÜZERİ PIN BİLGİ KUTUSU */
+        .map-pin-info {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            z-index: 500; background: white; border-radius: 16px; padding: 12px 18px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.18); font-size: 13px;
+            display: none; align-items: center; gap: 10px; max-width: 300px;
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp { from { transform: translateX(-50%) translateY(10px); opacity:0; } to { transform: translateX(-50%) translateY(0); opacity:1; } }
+        body.dark-mode .map-pin-info { background: #2d2d2d; color: #eee; }
+
+        /* HATIRLATICI SEKMESİ */
+        .reminder-hero {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            padding: 20px; border-radius: 20px; color: white; margin-bottom: 20px;
+        }
+        .reminder-hero h3 { font-family: 'Cormorant Garamond', serif; font-size: 24px; }
+        .reminder-hero p { font-size: 11px; opacity: 0.85; text-transform: uppercase; letter-spacing: 1px; }
+        .reminder-form { background: white; border: 1px solid var(--bordo); border-radius: 16px; padding: 18px; margin-bottom: 15px; }
+        body.dark-mode .reminder-form { background: #2d2d2d; border-color: #444; }
+        .reminder-input {
+            width: 100%; padding: 10px 14px; border: 1px solid var(--bordo); border-radius: 10px;
+            font-size: 13px; margin-bottom: 10px; outline: none; font-family: 'DM Sans', sans-serif;
+            transition: 0.2s;
+        }
+        .reminder-input:focus { border-color: #e74c3c; box-shadow: 0 0 0 3px rgba(231,76,60,0.1); }
+        body.dark-mode .reminder-input { background: #1a1a1a; border-color: #555; color: #eee; }
+        .reminder-row { display: flex; gap: 8px; margin-bottom: 10px; }
+        .reminder-add-btn {
+            width: 100%; padding: 11px; background: #e74c3c; color: white; border: none;
+            border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; transition: 0.2s;
+        }
+        .reminder-add-btn:hover { background: #c0392b; }
+        .reminder-item {
+            background: white; border: 1px solid var(--bordo); border-radius: 12px;
+            padding: 14px 16px; margin-bottom: 8px; display: flex; align-items: center; gap: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        body.dark-mode .reminder-item { background: #2d2d2d; border-color: #444; }
+        .reminder-item.fired { opacity: 0.5; text-decoration: line-through; }
+        .reminder-time-badge {
+            background: #ffeaea; color: #e74c3c; padding: 3px 9px; border-radius: 8px;
+            font-size: 11px; font-weight: 700; white-space: nowrap;
+        }
+        .reminder-item.fired .reminder-time-badge { background: #eee; color: #999; }
+
+        /* ISI HARİTASI - custom canvas overlay (CSS shimmer) */
+        .heat-legend {
+            position: absolute; top: 15px; right: 15px; z-index: 500;
+            background: white; border-radius: 12px; padding: 10px 14px;
+            font-size: 11px; box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+            display: none;
+        }
+        body.dark-mode .heat-legend { background: #2d2d2d; color: #eee; }
+        .heat-gradient { height: 10px; width: 120px; border-radius: 5px; margin-top: 5px;
+            background: linear-gradient(to right, #2ecc71, #f1c40f, #e74c3c); }
+
     </style>
 </head>
 <body>
 
+<!-- INFO MODAL -->
+<div id="infoModal" class="modal-overlay">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeAbout()">×</span>
+        <div class="modal-tabs">
+            <button class="modal-tab-btn active" onclick="switchModalTab(this, 'app-info')">UYGULAMA</button>
+            <button class="modal-tab-btn" onclick="switchModalTab(this, 'italy-info')">İTALYA HAKKINDA</button>
+        </div>
+        <div id="app-info" class="tab-pane active">
+            <h3 style="color: var(--verde); margin-bottom: 10px;">Smart Tourism Route v2.0</h3>
+            <p>Bu uygulama, İtalya'nın en popüler şehirlerinde akıllı rota yönetimi sağlamak için tasarlanmıştır. Hava durumuna göre kapalı alan önerileri sunar, ulaşım maliyetlerini hesaplar ve bütçenizi anlık takip eden bir rehberdir.</p>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+                <li>Anlık bütçe takibi</li>
+                <li>Hava durumuna göre rota optimizasyonu</li>
+                <li>Havalimanı transfer rehberi</li>
+                <li>Konaklama önerileri</li>
+            </ul>
+        </div>
+        <div id="italy-info" class="tab-pane">
+            <h3 style="color: #CD212A; margin-bottom: 10px;">Benvenuto in Italia!</h3>
+            <p>İtalya, Roma İmparatorluğu'nun beşiği ve Rönesans'ın kalbidir. 58 UNESCO Dünya Mirası sitesiyle dünyada birinci sıradadır. Sanat, mutfak ve tarihle harmanlanmış bu rotada her şehir farklı bir hikaye anlatır.</p>
+            <p style="margin-top: 10px;"><b>Para Birimi:</b> Euro (€)<br><b>Dil:</b> İtalyanca<br><b>Acil Durum:</b> 112</p>
+        </div>
+    </div>
+</div>
+
 <header>
     <div class="header-brand">
-        <div class="brand-text"><h1>İtalya Rota Sistemi</h1><small>Smart Tourism Route Management</small></div>
+        <div class="brand-text">
+            <h1>
+                <span class="t-green">İtalya</span> 
+                <span class="t-white">Rota</span> 
+                <span class="t-red">Sistemi</span>
+                <span class="info-i" onclick="openAbout()">i</span>
+            </h1>
+            <small style="color:var(--soft); font-size:10px; letter-spacing:1px;">Smart Tourism Route Management</small>
+        </div>
     </div>
 
     <div class="budget-wrapper">
@@ -156,25 +495,69 @@
         </div>
     </div>
 
-    <div style="display: flex; gap: 10px;">
+    <button class="attention-btn" onclick="switchTab('attention-tab')">
+        <i class="fas fa-exclamation-triangle"></i> DİKKATLİ OL
+    </button>
+
+    <div style="display: flex; gap: 10px; align-items:center;">
+        <button class="lang-btn" onclick="cycleLang()">
+            <span id="langFlag">🇹🇷</span> <span id="langCode">TR</span>
+        </button>
         <div class="mode-toggle" onclick="toggleDarkMode()">
             <i id="modeIcon" class="fas fa-moon"></i> <span id="modeText">Gece Modu</span>
         </div>
         <div class="weather-display" id="weatherInfo">
-            <i class="fas fa-sun"></i> <span>Hava Durumu...</span>
+            <i class="fas fa-sun" style="color:#f39c12"></i> <span>Hava Durumu...</span>
         </div>
     </div>
 </header>
 
 <div class="main-container">
     <div class="sidebar">
+        <!-- SEKMELER — stay butonu eklendi -->
         <div class="sidebar-tabs">
-            <button class="tab-btn active" onclick="switchTab('route-tab')"><i class="fas fa-map-marked-alt"></i> Rota</button>
-            <button class="tab-btn" onclick="switchTab('airport-tab')"><i class="fas fa-plane-departure"></i> Transfer</button>
+            <button class="tab-btn active" id="btn-route" onclick="switchTab('route-tab')">
+                <i class="fas fa-map-marked-alt"></i>
+                <span class="tab-label">Rota</span>
+            </button>
+            <button class="tab-btn" id="btn-airport" onclick="switchTab('airport-tab')">
+                <i class="fas fa-plane-departure"></i>
+                <span class="tab-label">Transfer</span>
+            </button>
+            <button class="tab-btn" id="btn-stay" onclick="switchTab('stay-tab')">
+                <i class="fas fa-bed"></i>
+                <span class="tab-label">Konaklama</span>
+            </button>
+            <button class="tab-btn" id="btn-attention" onclick="switchTab('attention-tab')">
+                <i class="fas fa-exclamation-circle"></i>
+                <span class="tab-label">Kurallar</span>
+            </button>
+            <button class="tab-btn" id="btn-events" onclick="switchTab('events-tab')">
+                <i class="fas fa-calendar"></i>
+                <span class="tab-label">Etkinlik</span>
+            </button>
+            <button class="tab-btn" id="btn-currency" onclick="switchTab('currency-tab')">
+                <i class="fas fa-coins"></i>
+                <span class="tab-label">Döviz</span>
+            </button>
+            <button class="tab-btn" id="btn-favorites" onclick="switchTab('favorites-tab')">
+                <i class="fas fa-star"></i>
+                <span class="tab-label">Favori</span>
+            </button>
+            <button class="tab-btn" id="btn-reminder" onclick="switchTab('reminder-tab')">
+                <i class="fas fa-bell"></i>
+                <span class="tab-label">Alarm</span>
+            </button>
         </div>
 
         <div class="sidebar-scroll">
+
+            <!-- ROTA SEKMESİ -->
             <div id="route-tab" class="tab-content active">
+                <div class="search-bar-wrap">
+                    <i class="fas fa-search"></i>
+                    <input class="search-input" id="placeSearch" type="text" placeholder="Mekan ara... (ör. Colosseum)" oninput="filterPlaces(this.value)">
+                </div>
                 <div class="section-label">Şehir Seçin</div>
                 <div class="city-grid">
                     <button class="city-btn active" data-city="Rome" onclick="selectCity(this)"><span>🏛️ Roma</span></button>
@@ -187,27 +570,140 @@
 
                 <div class="section-label">Ulaşım</div>
                 <div class="transport-grid">
-                    <button class="trans-btn active" onclick="setTransport(this, 'walk', 0, 5)"><i class="fas fa-walking"></i></button>
-                    <button class="trans-btn" onclick="setTransport(this, 'car', 1.8, 35)"><i class="fas fa-car"></i></button>
-                    <button class="trans-btn" onclick="setTransport(this, 'bus', 1.2, 22)"><i class="fas fa-bus"></i></button>
-                    <button class="trans-btn" onclick="setTransport(this, 'train', 2.5, 50)"><i class="fas fa-subway"></i></button>
+                    <button class="trans-btn active" onclick="setTransport(this, 'walk', 0, 5)">
+                        <i class="fas fa-walking" style="font-size:16px;"></i>
+                        <span class="trans-label">Yürüyüş</span>
+                        <span class="trans-price">Ücretsiz</span>
+                    </button>
+                    <button class="trans-btn" onclick="setTransport(this, 'car', 1.8, 35)">
+                        <i class="fas fa-car" style="font-size:16px;"></i>
+                        <span class="trans-label">Taksi</span>
+                        <span class="trans-price">€1.8/km</span>
+                    </button>
+                    <button class="trans-btn" onclick="setTransport(this, 'bus', 1.2, 22)">
+                        <i class="fas fa-bus" style="font-size:16px;"></i>
+                        <span class="trans-label">Otobüs</span>
+                        <span class="trans-price">€1.2/km</span>
+                    </button>
+                    <button class="trans-btn" onclick="setTransport(this, 'train', 2.5, 50)">
+                        <i class="fas fa-subway" style="font-size:16px;"></i>
+                        <span class="trans-label">Metro</span>
+                        <span class="trans-price">€2.5/km</span>
+                    </button>
                 </div>
 
+                <div id="transport-summary"></div>
                 <div id="results"></div>
             </div>
 
+            <!-- TRANSFERSEKMESİ -->
             <div id="airport-tab" class="tab-content">
                 <div id="airport-results"></div>
             </div>
+
+            <!-- KONAKLAMA SEKMESİ — düzeltildi, artık bağımsız -->
+            <div id="stay-tab" class="tab-content">
+                <div id="stay-results"></div>
+            </div>
+
+            <!-- KURALLAR SEKMESİ -->
+            <div id="attention-tab" class="tab-content">
+                <div id="attention-results"></div>
+            </div>
+
+            <!-- ETKİNLİKLER SEKMESİ -->
+            <div id="events-tab" class="tab-content">
+                <div class="airport-hero" style="background:linear-gradient(135deg,#8e44ad,#c0392b);margin-bottom:12px;">
+                    <p>YIL BOYUNCA ETKİNLİKLER</p>
+                    <h3>🎭 İtalya Festivalleri</h3>
+                </div>
+                <div id="month-filters" style="display:flex;flex-wrap:wrap;gap:6px;padding:0 4px 12px;"></div>
+                <div id="events-list"><div style="text-align:center;padding:30px;color:#999;">Yükleniyor...</div></div>
+            </div>
+
+            <!-- DÖVİZ SEKMESİ -->
+            <div id="currency-tab" class="tab-content">
+                <div class="currency-hero">
+                    <p>CANLI DÖVİZ ÇEVİRİCİ</p>
+                    <h3>💱 Döviz Hesaplayıcı</h3>
+                </div>
+                <div class="section-label">Miktar & Para Birimi</div>
+                <div class="currency-input-row">
+                    <input class="currency-input" id="currencyAmount" type="number" value="100" min="0" oninput="convertCurrency()">
+                    <select class="currency-select" id="currencyFrom" onchange="convertCurrency()">
+                        <option value="EUR">€ EUR</option>
+                        <option value="USD">$ USD</option>
+                        <option value="TRY">₺ TRY</option>
+                        <option value="GBP">£ GBP</option>
+                    </select>
+                </div>
+                <div class="section-label">Sonuçlar</div>
+                <div id="currency-results"></div>
+                <div class="rate-note">⚠️ Oranlar yaklaşık sabit değerlerdir. Kesin bilgi için bankanızı arayın.</div>
+            </div>
+
+            <!-- FAVORİLER SEKMESİ -->
+            <div id="favorites-tab" class="tab-content">
+                <div class="fav-hero">
+                    <p>KAYDEDİLEN MEKANLAR</p>
+                    <h3>⭐ Favorilerim</h3>
+                </div>
+                <div id="favorites-results"></div>
+            </div>
+
+            <!-- HATIRLATICI SEKMESİ -->
+            <div id="reminder-tab" class="tab-content">
+                <div class="reminder-hero">
+                    <p>ZİYARET PLANLAYICI</p>
+                    <h3>🔔 Hatırlatıcılar</h3>
+                </div>
+                <div class="reminder-form">
+                    <div class="section-label" style="margin-top:0">Yeni Hatırlatıcı</div>
+                    <input class="reminder-input" id="reminderPlace" type="text" placeholder="Mekan adı (ör. Colosseum)">
+                    <div class="reminder-row">
+                        <input class="reminder-input" id="reminderTime" type="time" style="margin-bottom:0;flex:1;">
+                        <input class="reminder-input" id="reminderDate" type="date" style="margin-bottom:0;flex:1;">
+                    </div>
+                    <input class="reminder-input" id="reminderNote" type="text" placeholder="Not ekle (isteğe bağlı)">
+                    <button class="reminder-add-btn" onclick="addReminder()">
+                        <i class="fas fa-plus"></i> Hatırlatıcı Ekle
+                    </button>
+                </div>
+                <div class="section-label">Kayıtlı Hatırlatıcılar</div>
+                <div id="reminder-list"></div>
+            </div>
+
+        </div><!-- /sidebar-scroll -->
+    </div><!-- /sidebar -->
+
+    <div style="position:relative;flex:1;display:flex;flex-direction:column;min-width:0;">
+        <div id="map" style="flex:1;min-height:0;width:100%;height:calc(100vh - 120px);" style="flex:1;"></div>
+        <button class="heatmap-btn" id="heatmapToggle" onclick="toggleHeatmap()">
+            <i class="fas fa-fire"></i> Isı Haritası
+        </button>
+        <div class="heat-legend" id="heatLegend">
+            <div style="font-weight:700; font-size:10px; text-transform:uppercase; letter-spacing:1px;">Yoğunluk</div>
+            <div class="heat-gradient"></div>
+            <div style="display:flex;justify-content:space-between;font-size:9px;margin-top:3px;opacity:0.6;"><span>Az</span><span>Çok</span></div>
+        </div>
+        <div class="map-pin-info" id="mapPinInfo">
+            <i class="fas fa-map-pin" style="color:#e74c3c;font-size:18px;"></i>
+            <div>
+                <div id="pinCoords" style="font-weight:700;"></div>
+                <div id="pinNote" style="font-size:11px;color:var(--soft);">Haritaya tıklanan nokta</div>
+            </div>
+            <button onclick="document.getElementById('mapPinInfo').style.display='none'" style="margin-left:auto;background:none;border:none;cursor:pointer;color:#999;font-size:16px;">×</button>
         </div>
     </div>
-    <div id="map"></div>
 </div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
 let map = L.map('map').setView([41.87, 12.57], 6);
-let currentTiles = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+let currentTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {attribution:'© OSM',maxZoom:19}).addTo(map);
+setTimeout(function(){map.invalidateSize(true);},100);
+setTimeout(function(){map.invalidateSize(true);},500);
+setTimeout(function(){map.invalidateSize(true);},1500);
 
 let markers = [];
 let routeLine = null;
@@ -217,129 +713,451 @@ let isRainyGlobal = false;
 let isDarkMode = false;
 const BUDGET_LIMIT = 100;
 
-// Veri Seti
 const places = {
     Rome: {
-        spots: [{name:"Colosseum",lat:41.8902,lon:12.4922,price:18,indoor:false},{name:"Trevi Fountain",lat:41.9009,lon:12.4833,price:0,indoor:false},{name:"Pantheon",lat:41.8986,lon:12.4768,price:5,indoor:true}],
-        food: {name:"Giolitti Gelato",lat:41.9001,lon:12.4776,price:6,desc:"Tarihi Roma Dondurmacısı"},
-        airport: {name: "Fiumicino (FCO)", options: [{mode: "Leonardo Express", time: "32 dk", price: "€14", icon: "fa-train"}, {mode: "Terravision Bus", time: "55 dk", price: "€6", icon: "fa-bus"}, {mode: "Taksi", time: "45 dk", price: "€50", icon: "fa-taxi"}]}
+        spots: [
+            {name:"Colosseum",lat:41.8902,lon:12.4922,price:18,indoor:false},
+            {name:"Trevi Fountain",lat:41.9009,lon:12.4833,price:0,indoor:false},
+            {name:"Pantheon",lat:41.8986,lon:12.4768,price:5,indoor:true}
+        ],
+        food: {name:"Giolitti Gelato",lat:41.9001,lon:12.4776,price:6},
+        stay: {
+            hotels: [{name:"Hotel Artemide",price:"€220"}, {name:"Hotel Nazionale",price:"€185"}],
+            airbnb: [{name:"Trastevere Loft",price:"€130"}, {name:"Vatican View Apt",price:"€155"}]
+        },
+        airport: {name:"Fiumicino (FCO)", options:[
+            {mode:"Leonardo Express", price:"€14", time:"32dk", icon:"fa-train"},
+            {mode:"Taksi", price:"~€50", time:"45dk", icon:"fa-taxi"},
+            {mode:"Otobüs (Terravision)", price:"€6", time:"1s 10dk", icon:"fa-bus"},
+            {mode:"Kiralık Araç", price:"€30+", time:"40dk", icon:"fa-car"}
+        ]},
+        tips: ["Su içmek için 'Nasone' çeşmelerini kullanın.", "Vatikan için omuzlarınızı örtün."]
     },
     Florence: {
-        spots: [{name:"Duomo",lat:43.7731,lon:11.2560,price:15,indoor:true},{name:"Uffizi Gallery",lat:43.7687,lon:11.2550,price:20,indoor:true}],
-        food: {name:"All'Antico Vinaio",lat:43.7682,lon:11.2564,price:10,desc:"Sandviç Durağı"},
-        airport: {name: "Peretola (FLR)", options: [{mode: "Tramvay (T2)", time: "20 dk", price: "€1.5", icon: "fa-subway"}, {mode: "Shuttle Bus", time: "25 dk", price: "€6", icon: "fa-bus"}, {mode: "Taksi", time: "15 dk", price: "€25", icon: "fa-taxi"}]}
+        spots: [{name:"Duomo",lat:43.7731,lon:11.2560,price:15,indoor:true},{name:"Ponte Vecchio",lat:43.7680,lon:11.2532,price:0,indoor:false}],
+        food: {name:"All'Antico Vinaio",lat:43.7682,lon:11.2564,price:10},
+        stay: {
+            hotels: [{name:"Brunelleschi Hotel",price:"€340"}],
+            airbnb: [{name:"Arno River Studio",price:"€145"}]
+        },
+        airport: {name:"Peretola (FLR)", options:[
+            {mode:"Tramvay (T2)", price:"€1.5", time:"20dk", icon:"fa-tram"},
+            {mode:"Taksi", price:"~€25", time:"15dk", icon:"fa-taxi"},
+            {mode:"Otobüs (VOLA)", price:"€6", time:"25dk", icon:"fa-bus"},
+            {mode:"Kiralık Araç", price:"€20+", time:"15dk", icon:"fa-car"}
+        ]},
+        tips: ["Uffizi galerisi için önceden rezervasyon yapın."]
     },
     Venice: {
-        spots: [{name:"St Mark's Basilica",lat:45.4340,lon:12.3390,price:10,indoor:true},{name:"Doge Palace",lat:45.4337,lon:12.3400,price:20,indoor:true}],
-        food: {name:"Harry's Bar",lat:45.4326,lon:12.3376,price:15,desc:"Aperitif Durağı"},
-        airport: {name: "Marco Polo (VCE)", options: [{mode: "Alilaguna", time: "1s 15dk", price: "€15", icon: "fa-ship"}, {mode: "ATVO Bus", time: "20 dk", price: "€10", icon: "fa-bus"}, {mode: "Su Taksisi", time: "30 dk", price: "€120", icon: "fa-anchor"}]}
+        spots: [{name:"St Mark's Basilica",lat:45.4345,lon:12.3397,price:10,indoor:true}],
+        food: {name:"Harry's Bar",lat:45.4326,lon:12.3376,price:20},
+        stay: {
+            hotels: [{name:"Hotel Danieli",price:"€700"}],
+            airbnb: [{name:"Canal View Suite",price:"€210"}]
+        },
+        airport: {name:"Marco Polo (VCE)", options:[
+            {mode:"Alilaguna Bot", price:"€15", time:"1s 10dk", icon:"fa-ship"},
+            {mode:"Su Taksisi", price:"~€110", time:"30dk", icon:"fa-anchor"},
+            {mode:"Otobüs (ATVO)", price:"€8", time:"25dk", icon:"fa-bus"},
+            {mode:"Taksi + Vapur", price:"~€40", time:"40dk", icon:"fa-taxi"}
+        ]},
+        tips: ["Kanallarda yüzmek kesinlikle yasaktır."]
     },
     Milan: {
-        spots: [{name:"Duomo di Milano",lat:45.4642,lon:9.1916,price:15,indoor:true},{name:"Galleria",lat:45.4659,lon:9.1900,price:0,indoor:true}],
-        food: {name:"Luini Panzerotti",lat:45.4655,lon:9.1923,price:5,desc:"Panzerotti Durağı"},
-        airport: {name: "Malpensa (MXP)", options: [{mode: "Express Train", time: "50 dk", price: "€13", icon: "fa-train"}, {mode: "Bus Shuttle", time: "1 sa", price: "€10", icon: "fa-bus"}, {mode: "Taksi", time: "50 dk", price: "€100", icon: "fa-taxi"}]}
+        spots: [{name:"Duomo di Milano",lat:45.4642,lon:9.1919,price:15,indoor:true}],
+        food: {name:"Luini Panzerotti",lat:45.4655,lon:9.1923,price:5},
+        stay: {
+            hotels: [{name:"Armani Hotel",price:"€600"}],
+            airbnb: [{name:"Brera Design Apt",price:"€180"}]
+        },
+        airport: {name:"Malpensa (MXP)", options:[
+            {mode:"Malpensa Express", price:"€13", time:"50dk", icon:"fa-train"},
+            {mode:"Taksi", price:"~€90", time:"45dk", icon:"fa-taxi"},
+            {mode:"Otobüs (Terravision)", price:"€10", time:"1s", icon:"fa-bus"},
+            {mode:"Kiralık Araç", price:"€35+", time:"50dk", icon:"fa-car"}
+        ]},
+        tips: ["Aperitivo saati 18:00 - 20:00 arasıdır."]
     },
     Naples: {
-        spots: [{name:"Pompeii",lat:40.7460,lon:14.4989,price:16,indoor:false},{name:"Museum",lat:40.8530,lon:14.2500,price:15,indoor:true}],
-        food: {name:"Da Michele Pizza",lat:40.8497,lon:14.2633,price:10,desc:"Pizza Durağı"},
-        airport: {name: "Capodichino (NAP)", options: [{mode: "Alibus", time: "20 dk", price: "€5", icon: "fa-bus"}, {mode: "Taksi", time: "15 dk", price: "€20", icon: "fa-taxi"}]}
+        spots: [{name:"Pompeii",lat:40.7461,lon:14.4989,price:19,indoor:false}],
+        food: {name:"L'Antica Pizzeria da Michele",lat:40.8497,lon:14.2633,price:10},
+        stay: {
+            hotels: [{name:"Grand Hotel Vesuvio",price:"€310"}],
+            airbnb: [{name:"Spaccanapoli Room",price:"€85"}]
+        },
+        airport: {name:"Capodichino (NAP)", options:[
+            {mode:"Alibus", price:"€5", time:"15dk", icon:"fa-bus"},
+            {mode:"Taksi", price:"~€25", time:"15dk", icon:"fa-taxi"},
+            {mode:"Metro + Yürüyüş", price:"€1.1", time:"30dk", icon:"fa-subway"},
+            {mode:"Kiralık Araç", price:"€20+", time:"15dk", icon:"fa-car"}
+        ]},
+        tips: ["Dünyanın en iyi pizzasını burada yiyeceksiniz!"]
     },
     Turin: {
-        spots: [{name:"Mole Antonelliana",lat:45.0687,lon:7.6930,price:15,indoor:true},{name:"Egyptian Museum",lat:45.0680,lon:7.6820,price:15,indoor:true}],
-        food: {name:"Caffè Bicerin",lat:45.0747,lon:7.6806,price:7,desc:"Kahve Durağı"},
-        airport: {name: "Torino (TRN)", options: [{mode: "Tren (SFM1)", time: "30 dk", price: "€3.7", icon: "fa-train"}, {mode: "Arriva Bus", time: "45 dk", price: "€7", icon: "fa-bus"}, {mode: "Taksi", time: "30 dk", price: "€35", icon: "fa-taxi"}]}
+        spots: [{name:"Mole Antonelliana",lat:45.0689,lon:7.6931,price:12,indoor:true}],
+        food: {name:"Caffè Bicerin",lat:45.0747,lon:7.6806,price:8},
+        stay: {
+            hotels: [{name:"Turin Palace Hotel",price:"€190"}],
+            airbnb: [{name:"Po River Attic",price:"€95"}]
+        },
+        airport: {name:"Torino (TRN)", options:[
+            {mode:"SADEM Bus", price:"€6.5", time:"45dk", icon:"fa-bus"},
+            {mode:"Taksi", price:"~€35", time:"30dk", icon:"fa-taxi"},
+            {mode:"GTT Otobüs", price:"€3", time:"50dk", icon:"fa-bus-alt"},
+            {mode:"Kiralık Araç", price:"€25+", time:"30dk", icon:"fa-car"}
+        ]},
+        tips: ["Mısır Müzesi'ni mutlaka ziyaret edin."]
     }
 };
 
-function switchTab(tabId) {
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+// --- SMART YOĞUNLUK ALGORİTMASI ---
+function getSmartCrowdLevel(place) {
+    const hour = new Date().getHours();
+    let score = 0;
+    if (hour >= 8 && hour < 11) score = 35;
+    else if (hour >= 11 && hour < 15) score = 85;
+    else if (hour >= 15 && hour < 19) score = 65;
+    else if (hour >= 19 && hour < 23) score = 25;
+    else score = 5;
+    if (isRainyGlobal) {
+        if (!place.indoor) score -= 30;
+        else score += 15;
+    }
+    const jitter = (place.name.length % 10);
+    return Math.max(10, Math.min(score + jitter, 98));
+}
+
+// --- MODAL ---
+function openAbout() { document.getElementById('infoModal').style.display = 'flex'; }
+function closeAbout() { document.getElementById('infoModal').style.display = 'none'; }
+function switchModalTab(btn, tabId) {
+    document.querySelectorAll('.modal-tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
     document.getElementById(tabId).classList.add('active');
-    event.currentTarget.classList.add('active');
 }
 
-function toggleDarkMode() {
-    isDarkMode = !isDarkMode;
-    document.body.classList.toggle('dark-mode');
-    map.removeLayer(currentTiles);
-    const tileUrl = isDarkMode ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
-    currentTiles = L.tileLayer(tileUrl).addTo(map);
-    document.getElementById('modeIcon').className = isDarkMode ? 'fas fa-sun' : 'fas fa-moon';
-}
-
-function updateWeatherUI(city, isRainy) {
-    const weatherInfo = document.getElementById('weatherInfo');
-    weatherInfo.innerHTML = isRainy ? `<i class="fas fa-cloud-showers-heavy"></i> <span>${city}: 12°C</span>` : `<i class="fas fa-sun" style="color:#f39c12"></i> <span>${city}: 24°C</span>`;
-}
-
-function generateRoute() {
-    markers.forEach(m => map.removeLayer(m));
-    markers = [];
-    if (routeLine) map.removeLayer(routeLine);
-    let cityData = places[selectedCity];
-    let routeItems = [...cityData.spots];
-    if (isRainyGlobal) routeItems.sort((a, b) => b.indoor - a.indoor);
-    routeItems.splice(Math.ceil(routeItems.length/2), 0, {...cityData.food, isFood: true});
-    let points = [];
-    let totalDist = 0;
-    let totalEntrance = 0;
-    routeItems.forEach((p, i) => {
-        totalEntrance += p.price || 0;
-        p.crowd = Math.floor(Math.random() * 80) + 10;
-        let color = p.isFood ? "#c5a45a" : (p.indoor ? "#2980b9" : "#2d8a52");
-        let iconHtml = `<div style="width:28px;height:28px;background:${color};border:3px solid white;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;">${p.isFood ? '🍴' : i+1}</div>`;
-        let marker = L.marker([p.lat, p.lon], {icon: L.divIcon({className: '', html: iconHtml})}).addTo(map);
-        markers.push(marker);
-        points.push([p.lat, p.lon]);
-        if(i > 0) totalDist += getDistance(routeItems[i-1].lat, routeItems[i-1].lon, p.lat, p.lon);
+// --- SEKME GEÇİŞİ ---
+function switchTab(tabId) {
+    if(tabId==='events-tab'){setTimeout(renderEvents,50);}
+    document.querySelectorAll('.tab-content').forEach(c => {
+        c.style.display = 'none';
+        c.classList.remove('active');
     });
-    routeLine = L.polyline(points, { color: isRainyGlobal ? "#2980b9" : "#1a6b3c", weight: 5, dashArray: '10, 10' }).addTo(map);
-    map.fitBounds(routeLine.getBounds(), { padding: [80, 80] });
-    const transportCost = totalDist * currentTransport.costPerKm;
-    updateBudgetProgress(totalEntrance + transportCost);
-    showPlaces(routeItems, totalDist, transportCost);
-    showAirportInfo();
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+    const selectedTab = document.getElementById(tabId);
+    if (selectedTab) {
+        selectedTab.style.display = 'block';
+        selectedTab.classList.add('active');
+    }
+    const btnId = 'btn-' + tabId.replace('-tab', '');
+    const activeBtn = document.getElementById(btnId);
+    if (activeBtn) activeBtn.classList.add('active');
+
+    if (tabId === 'stay-tab') showStay();
+    if (tabId === 'currency-tab') convertCurrency();
+    if (tabId === 'favorites-tab') renderFavorites();
+    if (tabId === 'reminder-tab') renderReminders();
 }
 
+// --- KONAKLAMA ---
+function showStay() {
+    const stay = places[selectedCity].stay;
+    let html = `
+        <div class="stay-hero">
+            <p>KONAKLAMA</p>
+            <h3>${selectedCity} Otelleri</h3>
+        </div>
+        <div class="section-label">🏨 Lüks & Butik Oteller</div>
+    `;
+    stay.hotels.forEach(h => {
+        html += `
+            <div class="place-card hotel-card">
+                <div class="card-name">${h.name}</div>
+                <div class="price-tag hotel-price">${h.price} / gece</div>
+            </div>`;
+    });
+    html += `<div class="section-label">🏠 Airbnb & Günlük Kiralık</div>`;
+    stay.airbnb.forEach(a => {
+        html += `
+            <div class="place-card airbnb-card">
+                <div class="card-name">${a.name}</div>
+                <div class="price-tag airbnb-price">${a.price} / gece</div>
+            </div>`;
+    });
+    document.getElementById("stay-results").innerHTML = html;
+}
+
+// --- TRANSFERBİLGİSİ ---
 function showAirportInfo() {
-    const airportData = places[selectedCity].airport;
+    const air = places[selectedCity].airport;
+    const iconMap = {
+        'fa-train':'#2c3e50', 'fa-taxi':'#f39c12', 'fa-bus':'#27ae60',
+        'fa-bus-alt':'#27ae60', 'fa-car':'#8e44ad', 'fa-tram':'#16a085',
+        'fa-ship':'#2980b9', 'fa-anchor':'#1a5276', 'fa-subway':'#c0392b'
+    };
     let html = `
         <div class="airport-hero">
-            <p>Havalimanı Terminali</p>
-            <h3>${airportData.name}</h3>
+            <p>HAVAALANI TRANSFERİ</p>
+            <h3>${air.name}</h3>
         </div>
         <div class="section-label">Ulaşım Seçenekleri</div>
     `;
-    airportData.options.forEach(opt => {
+    air.options.forEach(o => {
+        const ic = o.icon || 'fa-car';
+        const color = iconMap[ic] || '#3498db';
         html += `
-            <div class="airport-card">
-                <div class="airport-icon-box"><i class="fas ${opt.icon}"></i></div>
-                <div class="airport-details">
-                    <h4>${opt.mode}</h4>
-                    <div class="airport-meta">
-                        <span><i class="fas fa-clock"></i> ${opt.time}</span>
-                        <span><i class="fas fa-map-marker-alt"></i> Merkeze</span>
+            <div class="place-card" style="border-left-color:${color}; display:flex; align-items:center; gap:14px; padding:14px 16px;">
+                <div style="width:44px;height:44px;border-radius:12px;background:${color}20;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <i class="fas ${ic}" style="font-size:18px;color:${color};"></i>
+                </div>
+                <div style="flex:1;">
+                    <div style="font-weight:700;font-size:14px;">${o.mode}</div>
+                    <div style="font-size:11px;color:var(--soft);margin-top:3px;">
+                        <i class="fas fa-clock"></i> ${o.time} &nbsp;·&nbsp; <i class="fas fa-map-marker-alt"></i> Merkeze
                     </div>
                 </div>
-                <div class="airport-price-tag">${opt.price}</div>
+                <div style="background:${color};color:white;padding:5px 12px;border-radius:10px;font-size:13px;font-weight:bold;white-space:nowrap;">${o.price}</div>
             </div>`;
     });
     document.getElementById("airport-results").innerHTML = html;
 }
 
-function showPlaces(list, dist, transCost) {
-    let html = `<div style="background:rgba(197,164,90,0.1); padding:15px; border-radius:12px; margin-bottom:15px; font-size:13px;">Mesafe: <b>${dist.toFixed(1)} km</b></div>`;
+// --- KURALLAR ---
+function showAttentionInfo() {
+    const tips = places[selectedCity].tips;
+    let html = `
+        <div class="airport-hero" style="background:linear-gradient(135deg,#f39c12,#e67e22);">
+            <p>Şehir Kuralları</p>
+            <h3>${selectedCity} Gezi Notları</h3>
+        </div>
+        <div class="warning-card" style="border-left-color:#3498db; background:#f0f7ff;">
+            <div class="warning-title" style="color:#2980b9;"><i class="fas fa-chart-line"></i> SMART YOĞUNLUK SİSTEMİ</div>
+            <div style="font-size:12px; line-height:1.5;">
+                Yoğunluk verileri; <b>mevcut saat</b>, <b>hava durumu</b> ve <b>mekan türüne</b> göre algoritmik olarak hesaplanmaktadır.
+            </div>
+        </div>
+        <!-- PARK REHBERİ KART BAŞLIĞI -->
+        <div style="background:linear-gradient(135deg,#1a2a6c,#2980b9);border-radius:16px;padding:16px 18px;color:white;margin-bottom:14px;">
+            <div style="display:flex;align-items:center;gap:10px;font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;">
+                <i class="fas fa-car" style="font-size:18px;"></i> İtalya Araç & Park Rehberi
+            </div>
+            <div style="font-size:10px;opacity:0.8;margin-top:3px;letter-spacing:1px;text-transform:uppercase;">Sürücüler için kapsamlı kılavuz</div>
+        </div>
+
+        <!-- ÇIZGI RENK AÇIKLAMASI -->
+        <div style="background:white;border:1px solid var(--bordo);border-radius:14px;padding:15px 16px;margin-bottom:12px;border-left:5px solid #3498db;">
+            <div style="font-weight:800;font-size:12px;letter-spacing:1px;margin-bottom:10px;display:flex;align-items:center;gap:7px;"><i class="fas fa-road" style="color:#3498db;"></i> YOL ÇİZGİ REHBERİ</div>
+            <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;">
+                <div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:#f0f6fb;border-radius:8px;">
+                    <div style="width:32px;height:8px;background:#3498db;border-radius:4px;flex-shrink:0;"></div>
+                    <div><b>Mavi Çizgi</b> — Ücretli park. Parkmetreye bilet al, camdan görün.</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:#fefce8;border-radius:8px;">
+                    <div style="width:32px;height:8px;background:#f1c40f;border-radius:4px;flex-shrink:0;"></div>
+                    <div><b>Sarı Çizgi</b> — Sadece yerel halk. Park etme, ceza kesindir!</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;padding:7px 10px;background:#f9f9f9;border-radius:8px;border:1px solid #eee;">
+                    <div style="width:32px;height:8px;background:#ddd;border-radius:4px;flex-shrink:0;border:1px solid #ccc;"></div>
+                    <div><b>Beyaz Çizgi</b> — Genelde ücretsiz. Tabelayı mutlaka kontrol et!</div>
+                </div>
+            </div>
+            <div style="font-size:10px;color:var(--soft);margin-top:8px;padding-top:8px;border-top:1px dashed #ddd;">⏰ Ücretli saatler genelde <b>08:00–20:00</b> arası. Pazar günleri çoğunlukla ücretsiz.</div>
+        </div>
+
+        <!-- CEZA BİLGİSİ -->
+        <div style="background:#fff5f5;border:1px solid #fcc;border-radius:14px;padding:15px 16px;margin-bottom:12px;border-left:5px solid #e74c3c;">
+            <div style="font-weight:800;font-size:12px;letter-spacing:1px;margin-bottom:10px;display:flex;align-items:center;gap:7px;"><i class="fas fa-exclamation-triangle" style="color:#e74c3c;"></i> PARA CEZALARI</div>
+            <div style="display:flex;flex-direction:column;gap:7px;font-size:12px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:white;border-radius:8px;">
+                    <span>🅿️ Geçersiz/süresi dolmuş bilet</span>
+                    <span style="color:#e74c3c;font-weight:800;">€25–€100</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:white;border-radius:8px;">
+                    <span>🚫 Sarı çizgiye park</span>
+                    <span style="color:#e74c3c;font-weight:800;">€87–€344</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:white;border-radius:8px;">
+                    <span>🚗 Çekici (otomobil)</span>
+                    <span style="color:#e74c3c;font-weight:800;">€150–€250</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:white;border-radius:8px;">
+                    <span>📵 ZTL yasak bölge girişi</span>
+                    <span style="color:#c0392b;font-weight:800;">€80–€500+</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ZTL BÖLGELERİ -->
+        <div style="background:#fef9f0;border:1px solid #fde8b0;border-radius:14px;padding:15px 16px;margin-bottom:12px;border-left:5px solid #f39c12;">
+            <div style="font-weight:800;font-size:12px;letter-spacing:1px;margin-bottom:10px;display:flex;align-items:center;gap:7px;"><i class="fas fa-ban" style="color:#f39c12;"></i> ZTL — ARAÇ GİRİŞ YASAK BÖLGELERİ</div>
+            <div style="font-size:12px;line-height:1.6;margin-bottom:10px;">ZTL (Zona a Traffico Limitato) tarihi bölgelerde araç trafiğini sınırlar. Kamera ile otomatik tespit yapılır. <b>Kiralık araçlarla girişte ceza kiralama firmasına kesilir ve sana yansıtılır!</b></div>
+            <div style="display:flex;flex-direction:column;gap:6px;font-size:11px;">
+                <div style="display:flex;align-items:flex-start;gap:8px;padding:7px 10px;background:white;border-radius:8px;">
+                    <span style="font-size:15px;flex-shrink:0;">🏛️</span>
+                    <div><b>Roma</b> — Tarihi merkez (Centro Storico) büyük ZTL bölgesi. GPS navigasyon bile sizi içeri alabilir.</div>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:8px;padding:7px 10px;background:white;border-radius:8px;">
+                    <span style="font-size:15px;flex-shrink:0;">🌸</span>
+                    <div><b>Floransa</b> — En sıkı ZTL uygulaması. Neredeyse tüm merkez yasak. Otel rezervasyonuyla izin alınabilir.</div>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:8px;padding:7px 10px;background:white;border-radius:8px;">
+                    <span style="font-size:15px;flex-shrink:0;">🛶</span>
+                    <div><b>Venedik</b> — Adaya araç girişi tamamen yasak. Mestre veya Fusina'da park et, vapurla geç.</div>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:8px;padding:7px 10px;background:white;border-radius:8px;">
+                    <span style="font-size:15px;flex-shrink:0;">⚡</span>
+                    <div><b>Milano</b> — Area C ücretli giriş bölgesi (€5/gün). Hafta içi 07:30–19:30 arası.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRATİK İPUÇLARI -->
+        <div style="background:#f0faf8;border:1px solid #a8e6d9;border-radius:14px;padding:15px 16px;margin-bottom:12px;border-left:5px solid #16a085;">
+            <div style="font-weight:800;font-size:12px;letter-spacing:1px;margin-bottom:10px;display:flex;align-items:center;gap:7px;"><i class="fas fa-lightbulb" style="color:#16a085;"></i> PRATİK İPUÇLARI</div>
+            <div style="display:flex;flex-direction:column;gap:7px;font-size:12px;">
+                <div style="display:flex;align-items:flex-start;gap:8px;">
+                    <span style="color:#16a085;flex-shrink:0;margin-top:1px;">✔</span>
+                    <span><b>Disco Orario</b> (park saati diski) koy — Ücretsiz park alanlarında mecburidir. Kiralık araçta genelde bulunur.</span>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:8px;">
+                    <span style="color:#16a085;flex-shrink:0;margin-top:1px;">✔</span>
+                    <span><b>EasyPark / MyCicero</b> uygulamalarıyla telefon üzerinden ödeme yap, parkmetreye koşma.</span>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:8px;">
+                    <span style="color:#16a085;flex-shrink:0;margin-top:1px;">✔</span>
+                    <span><b>P+R (Park & Ride)</b> — Şehir merkezinden önce otoparka bırak, metro veya otobüsle git. Çok daha ucuz!</span>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:8px;">
+                    <span style="color:#16a085;flex-shrink:0;margin-top:1px;">✔</span>
+                    <span><b>Kiralık araç almadan önce</b> firmanın ZTL ceza politikasını mutlaka sor. Bazıları günlük €15-30 ek idari ücret alır.</span>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:8px;">
+                    <span style="color:#16a085;flex-shrink:0;margin-top:1px;">✔</span>
+                    <span><b>Acil: 113</b> (Polis) / <b>116</b> (ACI yol yardım). Yabancı ehliyetle İtalya'da araç kullanabilirsiniz.</span>
+                </div>
+            </div>
+        </div>`;
+    tips.forEach(tip => {
+        html += `<div class="warning-card"><div class="warning-title"><i class="fas fa-exclamation-triangle"></i> DİKKAT</div><div>${tip}</div></div>`;
+    });
+    document.getElementById("attention-results").innerHTML = html;
+}
+
+// --- ROTA ---
+function generateRoute() {
+    markers.forEach(m => map.removeLayer(m));
+    markers = [];
+    if (routeLine) map.removeLayer(routeLine);
+
+    let cityData = places[selectedCity];
+    let routeItems = [...cityData.spots];
+    if (isRainyGlobal) routeItems.sort((a, b) => b.indoor - a.indoor);
+    routeItems.splice(Math.ceil(routeItems.length / 2), 0, {...cityData.food, isFood: true});
+
+    let points = [];
+    let totalDist = 0;
+    let totalEntrance = 0;
+
+    routeItems.forEach((p, i) => {
+        totalEntrance += p.price || 0;
+        p.crowd = getSmartCrowdLevel(p);
+        let color = p.isFood ? "#c5a45a" : (p.indoor ? "#2980b9" : "#2d8a52");
+        let iconHtml = `<div style="width:28px;height:28px;background:${color};border:3px solid white;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:bold;font-size:12px;">${p.isFood ? '🍴' : i+1}</div>`;
+        let marker = L.marker([p.lat, p.lon], {icon: L.divIcon({className:'', html:iconHtml})}).addTo(map);
+        markers.push(marker);
+        points.push([p.lat, p.lon]);
+        if (i > 0) totalDist += getDistance(routeItems[i-1].lat, routeItems[i-1].lon, p.lat, p.lon);
+    });
+
+    routeLine = L.polyline(points, {color: isRainyGlobal ? "#2980b9" : "#1a6b3c", weight: 5, dashArray: '10,10'}).addTo(map);
+    map.fitBounds(routeLine.getBounds(), {padding: [80, 80]});
+
+    const transportCost = totalDist * currentTransport.costPerKm;
+    updateBudgetProgress(totalEntrance + transportCost);
+    showPlaces(routeItems, totalDist);
+    showAirportInfo();
+    showAttentionInfo();
+    // stay-tab açıksa güncelle
+    if (document.getElementById('stay-tab').classList.contains('active')) showStay();
+}
+
+
+// ==================== MEKAN DETAY PANELİ ====================
+function openPlaceDetail(p) {
+    const details = placeDetails[p.name] || {};
+    const overlay = document.getElementById('placeDetailOverlay');
+
+    // Görsel
+    const imgArea = document.getElementById('detailImgArea');
+    if (details.img) {
+        imgArea.innerHTML = `<img class="place-detail-img" src="${details.img}" alt="${p.name}" onerror="this.parentNode.innerHTML='<div class=\"place-detail-img-placeholder\">${details.emoji||'📍'}</div>'">`;
+    } else {
+        imgArea.innerHTML = `<div class="place-detail-img-placeholder">${details.emoji||'📍'}</div>`;
+    }
+
+    // Başlık
+    document.getElementById('detailTitle').textContent = p.name;
+
+    // Rozetler
+    const crowdColor = p.crowd > 70 ? '#e74c3c' : p.crowd > 40 ? '#f39c12' : '#2ecc71';
+    const crowdLabel = p.crowd > 70 ? 'Çok Kalabalık' : p.crowd > 40 ? 'Orta Yoğun' : 'Sakin';
+    let meta = '';
+    if (p.price > 0) meta += `<span class="detail-badge" style="background:#fff3cd;color:#856404;"><i class="fas fa-ticket-alt"></i> €${p.price} Giriş</span>`;
+    else             meta += `<span class="detail-badge" style="background:#d4edda;color:#155724;"><i class="fas fa-check-circle"></i> Ücretsiz</span>`;
+    if (details.type) meta += `<span class="detail-badge" style="background:#e8f4f8;color:#2980b9;"><i class="fas fa-map-marker-alt"></i> ${details.type}</span>`;
+    meta += `<span class="detail-badge" style="background:${crowdColor}22;color:${crowdColor};"><i class="fas fa-users"></i> ${crowdLabel} %${p.crowd.toFixed(0)}</span>`;
+    if (details.hours) meta += `<span class="detail-badge" style="background:#f8f0fb;color:#8e44ad;"><i class="fas fa-clock"></i> ${details.hours}</span>`;
+    document.getElementById('detailMeta').innerHTML = meta;
+
+    // Açıklama + ipucu
+    let desc = details.desc || 'Bu mekan hakkında detaylı bilgi yakında eklenecek.';
+    if (details.tip) desc += `<div style="margin-top:12px;padding:10px 14px;background:#f0f7f4;border-radius:10px;border-left:3px solid var(--verde);font-size:12px;"><i class="fas fa-lightbulb" style="color:var(--verde);"></i> <b>İpucu:</b> ${details.tip}</div>`;
+    document.getElementById('detailDesc').innerHTML = desc;
+
+    // Aksiyon butonları
+    document.getElementById('detailActions').innerHTML = `
+        <a href="https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lon}" target="_blank" class="detail-go-btn">
+            <i class="fas fa-location-arrow"></i> Git
+        </a>
+        <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.name)}+Italy" target="_blank" class="detail-maps-btn">
+            <i class="fas fa-map"></i> Haritada Gör
+        </a>`;
+
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function closePlaceDetail(e, force) {
+    if (force || (e && e.target === document.getElementById('placeDetailOverlay'))) {
+        document.getElementById('placeDetailOverlay').classList.remove('open');
+        document.body.style.overflow = '';
+    }
+}
+
+// ESC ile kapat
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closePlaceDetail(null, true); });
+
+function showPlaces(list, dist) {
+    let html = `<div style="background:rgba(197,164,90,0.1);padding:12px 15px;border-radius:12px;margin-bottom:15px;font-size:13px;">Toplam Mesafe: <b>${dist.toFixed(1)} km</b></div>`;
     list.forEach((p, i) => {
         let crowdColor = p.crowd > 70 ? 'var(--danger)' : (p.crowd > 40 ? 'var(--oro)' : 'var(--verde)');
-        html += `<div class="place-card ${p.indoor ? "indoor" : ""} ${p.isFood ? "food-stop" : ""}">
-            <div class="card-name">${p.name}</div>
-            <div style="font-weight:bold; font-size:14px; color:var(--oro)">€${p.price}</div>
-            <div class="crowd-indicator">
-                <div class="crowd-text">Yoğunluk: %${p.crowd}</div>
-                <div class="crowd-bar-bg"><div class="crowd-bar-fill" style="width:${p.crowd}%; background:${crowdColor}"></div></div>
-            </div>
-            <a href="https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lon}" target="_blank" class="maps-link">Yol Tarifi</a>
-        </div>`;
+        const isFav = favorites.some(f => f.name === p.name);
+        const pJson = JSON.stringify(p).replace(/"/g,'&quot;');
+        html += `
+            <div class="place-card ${p.indoor ? 'indoor' : ''} ${p.isFood ? 'food-stop' : ''}" id="card-${p.name.replace(/\s/g,'_')}" onclick="openPlaceDetail(${pJson})">
+                <button class="fav-btn ${isFav ? 'active' : ''}" onclick="event.stopPropagation();toggleFavorite(${pJson}, this)" title="Favorilere ekle">★</button>
+                <div class="card-name">${p.name}</div>
+                <div style="font-weight:bold;font-size:14px;color:var(--oro)">€${p.price}</div>
+                <div class="crowd-indicator">
+                    <div class="crowd-text">Tahmini Yoğunluk: %${p.crowd.toFixed(0)}</div>
+                    <div class="crowd-bar-bg"><div class="crowd-bar-fill" style="width:${p.crowd}%;background:${crowdColor}"></div></div>
+                </div>
+                <div style="margin-top:10px;font-size:11px;color:var(--soft);display:flex;align-items:center;gap:5px;">
+                    <i class="fas fa-hand-pointer"></i> Detaylar için tıkla
+                </div>
+            </div>`;
     });
     document.getElementById("results").innerHTML = html;
 }
@@ -348,6 +1166,7 @@ function updateBudgetProgress(total) {
     const bar = document.getElementById('budgetBar');
     const label = document.getElementById('budgetLabel');
     bar.style.width = Math.min((total / BUDGET_LIMIT) * 100, 100) + '%';
+    bar.style.background = total > BUDGET_LIMIT ? 'var(--danger)' : 'var(--verde)';
     label.innerText = `€${total.toFixed(0)} / €${BUDGET_LIMIT}`;
 }
 
@@ -355,7 +1174,7 @@ function getDistance(lat1, lon1, lat2, lon2) {
     const R = 6371;
     const dLat = (lat2-lat1) * Math.PI / 180;
     const dLon = (lon2-lon1) * Math.PI / 180;
-    const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
     return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
 }
 
@@ -364,18 +1183,636 @@ function selectCity(btn) {
     btn.classList.add("active");
     selectedCity = btn.dataset.city;
     isRainyGlobal = Math.random() > 0.5;
-    updateWeatherUI(selectedCity, isRainyGlobal);
+    const weatherInfo = document.getElementById('weatherInfo');
+    weatherInfo.innerHTML = isRainyGlobal
+        ? `<i class="fas fa-cloud-showers-heavy"></i> <span>${selectedCity}: 12°C</span>`
+        : `<i class="fas fa-sun" style="color:#f39c12"></i> <span>${selectedCity}: 24°C</span>`;
     generateRoute();
 }
 
 function setTransport(btn, mode, cost, speed) {
     document.querySelectorAll(".trans-btn").forEach(b => b.classList.remove("active"));
     btn.classList.add("active");
-    currentTransport = { mode, costPerKm: cost, speed };
+    currentTransport = {mode, costPerKm: cost, speed};
+
+    // Ulaşım özet kutusu güncelle
+    const modeLabels = { walk:'Yürüyüş', car:'Taksi', bus:'Otobüs', train:'Metro' };
+    const modeColors = { walk:'#1a6b3c', car:'#f39c12', bus:'#27ae60', train:'#c0392b' };
+    const modeIcons = { walk:'fa-walking', car:'fa-car', bus:'fa-bus', train:'fa-subway' };
+    const summary = document.getElementById('transport-summary');
+    if (cost === 0) {
+        summary.innerHTML = `<i class="fas fa-${modeIcons[mode]}" style="color:${modeColors[mode]}"></i> <b>${modeLabels[mode]}</b> seçildi &mdash; <span style="color:var(--verde);font-weight:bold;">Ulaşım Ücretsiz</span>`;
+    } else {
+        const cityData = places[selectedCity];
+        const allPoints = [...cityData.spots, cityData.food];
+        let dist = 0;
+        for (let i = 1; i < allPoints.length; i++) {
+            dist += getDistance(allPoints[i-1].lat, allPoints[i-1].lon, allPoints[i].lat, allPoints[i].lon);
+        }
+        const transCost = (dist * cost).toFixed(2);
+        summary.innerHTML = `<i class="fas fa-${modeIcons[mode]}" style="color:${modeColors[mode]}"></i> <b>${modeLabels[mode]}</b> seçildi &mdash; Tahmini ulaşım maliyeti: <span style="color:${modeColors[mode]};font-weight:bold;">€${transCost}</span> (${dist.toFixed(1)} km × €${cost}/km)`;
+    }
+    summary.style.display = 'block';
+
     generateRoute();
 }
 
-window.onload = () => { selectCity(document.querySelector('.city-btn')); };
+function toggleDarkMode() {
+    isDarkMode = !isDarkMode;
+    document.body.classList.toggle('dark-mode');
+    map.removeLayer(currentTiles);
+    const theme = isDarkMode ? 'dark_all' : 'light_all';
+    currentTiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OSM',maxZoom:19}).addTo(map);
+    document.getElementById('modeIcon').className = isDarkMode ? 'fas fa-sun' : 'fas fa-moon';
+    document.getElementById('modeText').innerText = isDarkMode ? 'Aydınlık' : 'Gece Modu';
+}
+
+// ==================== FAVORİLER ====================
+let favorites = JSON.parse(localStorage.getItem('italya_favs') || '[]');
+
+function toggleFavorite(place, btn) {
+    const idx = favorites.findIndex(f => f.name === place.name);
+    if (idx === -1) {
+        favorites.push(place);
+        btn.classList.add('active');
+        showToast(`⭐ ${place.name} favorilere eklendi!`);
+    } else {
+        favorites.splice(idx, 1);
+        btn.classList.remove('active');
+        showToast(`🗑 ${place.name} favorilerden çıkarıldı`);
+    }
+    localStorage.setItem('italya_favs', JSON.stringify(favorites));
+    updateFavBadge();
+}
+
+function renderFavorites() {
+    const el = document.getElementById('favorites-results');
+    if (favorites.length === 0) {
+        el.innerHTML = `<div class="empty-fav"><i class="fas fa-star"></i><b>Henüz favori eklenmedi</b><br><small>Rota kartlarındaki ★ butonuna tıkla</small></div>`;
+        return;
+    }
+    let html = `<div class="section-label">${favorites.length} Kaydedilmiş Mekan</div>`;
+    favorites.forEach(p => {
+        const city = Object.keys(places).find(c => [...places[c].spots, places[c].food].some(s => s.name === p.name)) || '';
+        html += `<div class="fav-item">
+            <span style="font-size:22px;">${p.isFood ? '🍴' : (p.indoor ? '🏛️' : '🌿')}</span>
+            <div>
+                <div style="font-weight:700;font-size:14px;">${p.name}</div>
+                <div style="font-size:11px;color:var(--soft);">${city} &nbsp;·&nbsp; €${p.price || 0}</div>
+            </div>
+            <button class="fav-remove" onclick="removeFav('${p.name}')"><i class="fas fa-times"></i></button>
+        </div>`;
+    });
+    html += `<button onclick="clearFavs()" style="width:100%;padding:10px;border:1px dashed var(--danger);border-radius:12px;background:none;color:var(--danger);cursor:pointer;font-size:12px;font-weight:bold;margin-top:8px;"><i class="fas fa-trash"></i> Tümünü Temizle</button>`;
+    el.innerHTML = html;
+}
+
+function removeFav(name) {
+    favorites = favorites.filter(f => f.name !== name);
+    localStorage.setItem('italya_favs', JSON.stringify(favorites));
+    updateFavBadge();
+    renderFavorites();
+}
+
+function clearFavs() {
+    favorites = [];
+    localStorage.setItem('italya_favs', JSON.stringify(favorites));
+    updateFavBadge();
+    renderFavorites();
+}
+
+function updateFavBadge() {
+    const btn = document.getElementById('btn-favorites');
+    let badge = btn.querySelector('.fav-badge');
+    if (favorites.length > 0) {
+        if (!badge) { badge = document.createElement('span'); badge.className = 'fav-badge'; btn.appendChild(badge); }
+        badge.textContent = favorites.length;
+    } else if (badge) {
+        badge.remove();
+    }
+}
+
+function showToast(msg) {
+    let toast = document.getElementById('toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toast';
+        toast.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:#1c1c1e;color:white;padding:12px 20px;border-radius:30px;font-size:13px;z-index:9999;transition:opacity 0.4s;box-shadow:0 4px 20px rgba(0,0,0,0.3);';
+        document.body.appendChild(toast);
+    }
+    toast.textContent = msg;
+    toast.style.opacity = '1';
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => toast.style.opacity = '0', 2200);
+}
+
+// ==================== DÖVİZ ====================
+const rates = {
+    EUR: { USD: 1.08, TRY: 35.2, GBP: 0.86, EUR: 1 },
+    USD: { EUR: 0.93, TRY: 32.6, GBP: 0.80, USD: 1 },
+    TRY: { EUR: 0.0284, USD: 0.0307, GBP: 0.0228, TRY: 1 },
+    GBP: { EUR: 1.16, USD: 1.25, TRY: 43.5, GBP: 1 }
+};
+
+const currencyInfo = {
+    EUR: { flag: '🇪🇺', name: 'Euro', symbol: '€' },
+    USD: { flag: '🇺🇸', name: 'Amerikan Doları', symbol: '$' },
+    TRY: { flag: '🇹🇷', name: 'Türk Lirası', symbol: '₺' },
+    GBP: { flag: '🇬🇧', name: 'İngiliz Sterlini', symbol: '£' }
+};
+
+function convertCurrency() {
+    const amount = parseFloat(document.getElementById('currencyAmount').value) || 0;
+    const from = document.getElementById('currencyFrom').value;
+    const el = document.getElementById('currency-results');
+    if (!el) return;
+    const targets = Object.keys(currencyInfo).filter(c => c !== from);
+    let html = '';
+    targets.forEach(to => {
+        const converted = (amount * rates[from][to]).toFixed(2);
+        const info = currencyInfo[to];
+        html += `<div class="currency-result-card">
+            <span class="currency-flag">${info.flag}</span>
+            <div style="flex:1;">
+                <div class="currency-result-value">${info.symbol} ${parseFloat(converted).toLocaleString('tr-TR')}</div>
+                <div class="currency-result-label">${info.name} (${to})</div>
+            </div>
+            <div style="font-size:10px;color:var(--soft);text-align:right;">1 ${from}<br>= ${rates[from][to]} ${to}</div>
+        </div>`;
+    });
+    el.innerHTML = html;
+}
+
+// ==================== ARAMA & FİLTRE ====================
+function filterPlaces(query) {
+    const q = query.toLowerCase().trim();
+    const resultsEl = document.getElementById('results');
+    if (!q) { generateRoute(); return; }
+
+    // Tüm şehirlerde ara
+    let matches = [];
+    Object.entries(places).forEach(([city, data]) => {
+        [...data.spots, data.food].forEach(p => {
+            if (p.name.toLowerCase().includes(q)) {
+                matches.push({...p, city});
+            }
+        });
+    });
+
+    if (matches.length === 0) {
+        resultsEl.innerHTML = `<div style="text-align:center;padding:30px;color:var(--soft);"><i class="fas fa-search" style="font-size:32px;opacity:0.2;display:block;margin-bottom:10px;"></i>Sonuç bulunamadı</div>`;
+        return;
+    }
+
+    let html = `<div style="background:rgba(52,152,219,0.08);padding:12px 15px;border-radius:12px;margin-bottom:15px;font-size:13px;border:1px solid #3498db30;"><i class="fas fa-search" style="color:#3498db"></i> <b>${matches.length}</b> sonuç bulundu</div>`;
+    matches.forEach(p => {
+        const isFav = favorites.some(f => f.name === p.name);
+        html += `<div class="place-card" style="border-left-color:#3498db;">
+            <button class="fav-btn ${isFav ? 'active' : ''}" onclick="toggleFavorite(${JSON.stringify(p).replace(/"/g,'&quot;')}, this)">★</button>
+            <div style="font-size:10px;color:#3498db;font-weight:bold;text-transform:uppercase;letter-spacing:1px;">${p.city}</div>
+            <div class="card-name">${p.name}</div>
+            <div style="font-weight:bold;font-size:14px;color:var(--oro)">€${p.price || 0}</div>
+            <a href="https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lon}" target="_blank" class="maps-link"><i class="fas fa-directions"></i> Yol Tarifi</a>
+        </div>`;
+    });
+    resultsEl.innerHTML = html;
+}
+
+
+
+// ==================== MEKAN DETAY VERİLERİ ====================
+const placeDetails = {
+    "Colosseum": {
+        emoji: "🏟️",
+        img: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=800&q=80",
+        desc: "MS 70-80 yılları arasında inşa edilen Kolezyum, 50.000 seyirci kapasitesiyle antik dünyanın en büyük amfitiyatrosudur. Gladyatör dövüşlerine ve hayvan avlarına sahne olan bu yapı, Roma İmparatorluğu'nun gücünün simgesidir.",
+        type: "Açık Alan", hours: "09:00–19:00", tip: "Sabah 09:00'da git, kuyruk kısadır."
+    },
+    "Trevi Fountain": {
+        emoji: "⛲",
+        img: "https://images.unsplash.com/photo-1529260830199-42c24126f198?w=800&q=80",
+        desc: "1762'de tamamlanan Trevi Çeşmesi, Barok mimarinin şaheseridir. Efsaneye göre çeşmeye arkanızı dönerek para atarsanız Roma'ya geri dönersiniz. Her gün 3.000 Euro'dan fazla madeni para çeşmeden toplanır ve hayır kurumlarına bağışlanır.",
+        type: "Açık Alan", hours: "24 Saat Açık", tip: "Gece 22:00 sonrası kalabalık azalır, fotoğraf için idealdir."
+    },
+    "Pantheon": {
+        emoji: "🏛️",
+        img: "https://images.unsplash.com/photo-1515542622106-078bda21e30b?w=800&q=80",
+        desc: "MS 125'te inşa edilen Pantheon, 2.000 yıldır ayakta duran mucizevi bir yapıdır. Kubbesindeki 9 metrelik gökyüzü açıklığı (oculus) Roma mühendisliğinin zirvesidir. Şu anda aktif bir kilise olarak kullanılmaktadır.",
+        type: "Kapalı Alan", hours: "09:00–19:00 (Pazar: 09:00–18:00)", tip: "Kuyruksuz giriş için online bilet al."
+    },
+    "Giolitti Gelato": {
+        emoji: "🍦",
+        img: "https://images.unsplash.com/photo-1570197788417-0e82375c9371?w=800&q=80",
+        desc: "1900'den beri Roma'nın en köklü dondurma dükkanı. Kraliyet ailesi de dahil pek çok ünlünün uğrak noktası olan Giolitti, gerçek İtalyan gelato sanatının temsilcisidir. Özellikle fıstık (pistacchio) ve çilek (fragola) tatları muhteşemdir.",
+        type: "Restoran / Kafe", hours: "07:00–02:00", tip: "Fiyat listesine bak, turistik versiyondan kaçın."
+    },
+    "Duomo": {
+        emoji: "⛪",
+        img: "https://images.unsplash.com/photo-1543429258-baf33e0da8d6?w=800&q=80",
+        desc: "Floransa Katedrali'nin 114 metre yüksekliğindeki Brunelleschi Kubbesi, Rönesans mimarisinin en büyük başarısıdır. 463 basamak tırmanarak ulaşılan kubbe tepesinden tüm Floransa'yı görebilirsiniz.",
+        type: "Kapalı Alan", hours: "10:00–17:00", tip: "Kubbe tırmanışı için gün doğumunda var."
+    },
+    "Ponte Vecchio": {
+        emoji: "🌉",
+        img: "https://images.unsplash.com/photo-1594473843977-4f7277eef4a1?w=800&q=80",
+        desc: "1345'te inşa edilen Ponte Vecchio, Floransa'nın Arno Nehri üzerindeki tarihi köprüsüdür. Üzerinde kuyumcular ve mücevherci dükkanları bulunan bu köprü, II. Dünya Savaşı'nda yıkılmaktan mucizevi biçimde kurtulmuştur.",
+        type: "Açık Alan", hours: "24 Saat Açık", tip: "Gün batımında fotoğraf için muhteşem ışık."
+    },
+    "All'Antico Vinaio": {
+        emoji: "🥪",
+        img: "https://images.unsplash.com/photo-1509722747041-616f39b57569?w=800&q=80",
+        desc: "Floransa'nın en ünlü sandviç dükkanı. Dev focaccia aralarına sıkıştırılan İtalyan şarküteri ürünleriyle dolup taşan bu yer, dünyanın her köşesinden turistlerin ziyaret ettiği ikonik bir Floransalı lezzet noktasıdır.",
+        type: "Restoran", hours: "10:00–21:00", tip: "Öğle 12:00'den önce git, kuyruk uzuyor."
+    },
+    "St Mark's Basilica": {
+        emoji: "⛪",
+        img: "https://images.unsplash.com/photo-1523906834658-6e24ef2386f9?w=800&q=80",
+        desc: "Venedik'in kalbi San Marco Meydanı'ndaki bu Bizans başyapıtı, 828 yılından beri şehrin ruhani merkezi. Altın mozaiklerle kaplı iç mekânı ve Pala d'Oro adıyla bilinen altın mihrabı görülmeye değer.",
+        type: "Kapalı Alan", hours: "09:45–17:00", tip: "Omuzlar ve dizler örtülü olmalı, şal getir."
+    },
+    "Harry's Bar": {
+        emoji: "🍸",
+        img: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=800&q=80",
+        desc: "1931'de açılan Harry's Bar, Bellini kokteylinin ve Carpaccio'nun icad edildiği efsanevi mekân. Hemingway, Orson Welles ve Truman Capote'nin de takıldığı bu bar, UNESCO tarafından İtalya'nın ulusal kültürel mirası olarak tescillenmiştir.",
+        type: "Bar / Restoran", hours: "10:30–23:00", tip: "Bellini içmek için gelin ama fiyatlar çok yüksek!"
+    },
+    "Duomo di Milano": {
+        emoji: "⛪",
+        img: "https://images.unsplash.com/photo-1520175480921-4edfa2983e0f?w=800&q=80",
+        desc: "Gotik mimarinin en karmaşık örneklerinden biri olan Milano Katedrali'nin yapımı 1386'da başlamış, tam 600 yıl sürmüştür. 135 çan kulesi ve 3.400'den fazla heykeli olan katedralin terasına çıkarak Milano'nun siluetini seyredebilirsiniz.",
+        type: "Kapalı Alan", hours: "09:00–19:00", tip: "Teras için ayrı bilet gerekir, manzara değer."
+    },
+    "Luini Panzerotti": {
+        emoji: "🫓",
+        img: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80",
+        desc: "1888'den beri Milano'nun merkezinde hizmet veren Luini, Puglia'ya özgü kızartılmış hamur işi Panzerotti'nin Milano'daki adresidir. Domates ve mozzarella dolgulu bu küçük kapalı pizzalar, gerçek bir Milano sokak lezzetidir.",
+        type: "Sokak Yemeği", hours: "10:00–15:00 / 18:00–20:00", tip: "Genelde kısa kuyruk var, sabret."
+    },
+    "Pompeii": {
+        emoji: "🌋",
+        img: "https://images.unsplash.com/photo-1588666309990-d68f08e3d4a6?w=800&q=80",
+        desc: "MS 79'da Vezüv Yanardağı patlamasıyla kül altında kalan antik Roma kenti. 2.000 yıl boyunca korunan sokaklar, evler, freskler ve sakinlerin kalıpları zaman yolculuğuna çıkarır. İnsanlık tarihinin en çarpıcı arkeolojik alanlarından biridir.",
+        type: "Açık Hava Müzesi", hours: "09:00–19:30 (Son giriş 18:00)", tip: "En az 3-4 saat ayır. Rahat ayakkabı şart."
+    },
+    "L'Antica Pizzeria da Michele": {
+        emoji: "🍕",
+        img: "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&q=80",
+        desc: "1870'ten beri sadece iki çeşit pizza yapan bu efsanevi pizzacı: Margherita ve Marinara. 'Eat Pray Love' filminde Julia Roberts'ın pizza yediği yer. Gerçek Neapolitan pizzanın tanımı olan ince hamur, San Marzano domates ve bufala mozzarella burada.",
+        type: "Restoran", hours: "11:00–22:00 (Pazar Kapalı)", tip: "1-2 saat kuyruk normaldir. Değer!"
+    },
+    "Mole Antonelliana": {
+        emoji: "🏛️",
+        img: "https://images.unsplash.com/photo-1603871780747-30b61aeef21d?w=800&q=80",
+        desc: "168 metre yüksekliğiyle Torino'nun simgesi olan bu yapı, 1863-1889 yılları arasında inşa edilmiştir. İçinde İtalya'nın en iyi sinema müzesi (Museo Nazionale del Cinema) yer almaktadır. Asansörle tepeden Torino ve Alpler'in muhteşem manzarasına kavuşursunuz.",
+        type: "Müze", hours: "09:00–20:00 (Cuma-Cumartesi 23:00'a kadar)", tip: "Cuma akşamları gece müzesi atmosferi eşsiz."
+    },
+    "Caffè Bicerin": {
+        emoji: "☕",
+        img: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=800&q=80",
+        desc: "1763'ten beri aynı tarifte hazırlanan Bicerin, Torino'ya özgü sıcak içeceğin adıdır: espresso, sıcak çikolata ve süt kreması katmanlarından oluşur. Nietzsche, Dumas ve Cavour gibi büyük isimlerin de uğradığı bu kafe, İtalya'nın yaşayan kültürel miras listesindedir.",
+        type: "Tarihi Kafe", hours: "08:30–19:30 (Salı Kapalı)", tip: "Sadece Bicerin için gel, pişman olmayacaksın."
+    }
+};
+
+// ==================== DİL SİSTEMİ ====================
+const langs = {
+    TR: {
+        flag:'🇹🇷', route:'Rota', transfer:'Transfer', stay:'Konaklama',
+        rules:'Kurallar', events:'Etkinlik', currency:'Döviz', favs:'Favori', alarm:'Alarm',
+        selectCity:'Şehir Seçin', transport:'Ulaşım', heatmap:'Isı Haritası',
+        nightMode:'Gece Modu', dayMode:'Aydınlık', totalDist:'Toplam Mesafe',
+        crowdLabel:'Tahmini Yoğunluk', directions:'Yol Tarifi',
+        remHero:'ZİYARET PLANLAYICI', remTitle:'Hatırlatıcılar',
+        noReminder:'Henüz hatırlatıcı yok', addBtn:'Hatırlatıcı Ekle',
+        placeholderPlace:'Mekan adı (ör. Colosseum)', placeholderNote:'Not ekle (isteğe bağlı)'
+    },
+    EN: {
+        flag:'🇬🇧', route:'Route', transfer:'Transfer', stay:'Stay',
+        rules:'Rules', events:'Events', currency:'Currency', favs:'Favs', alarm:'Alarm',
+        selectCity:'Select City', transport:'Transport', heatmap:'Heat Map',
+        nightMode:'Dark Mode', dayMode:'Light Mode', totalDist:'Total Distance',
+        crowdLabel:'Est. Crowd', directions:'Directions',
+        remHero:'VISIT PLANNER', remTitle:'Reminders',
+        noReminder:'No reminders yet', addBtn:'Add Reminder',
+        placeholderPlace:'Place name (e.g. Colosseum)', placeholderNote:'Add note (optional)'
+    },
+    IT: {
+        flag:'🇮🇹', route:'Percorso', transfer:'Transfer', stay:'Soggiorno',
+        rules:'Regole', events:'Eventi', currency:'Valuta', favs:'Preferiti', alarm:'Avviso',
+        selectCity:'Seleziona Città', transport:'Trasporto', heatmap:'Mappa Calore',
+        nightMode:'Modalità Notte', dayMode:'Modalità Giorno', totalDist:'Distanza Totale',
+        crowdLabel:'Affollamento Stimato', directions:'Indicazioni',
+        remHero:'PIANIFICATORE', remTitle:'Promemoria',
+        noReminder:'Nessun promemoria', addBtn:'Aggiungi Promemoria',
+        placeholderPlace:'Nome luogo (es. Colosseo)', placeholderNote:'Aggiungi nota (opzionale)'
+    }
+};
+const langOrder = ['TR','EN','IT'];
+let currentLang = 'TR';
+
+function cycleLang() {
+    const idx = langOrder.indexOf(currentLang);
+    currentLang = langOrder[(idx + 1) % langOrder.length];
+    applyLang();
+}
+
+function applyLang() {
+    const L = langs[currentLang];
+    document.getElementById('langFlag').textContent = L.flag;
+    document.getElementById('langCode').textContent = currentLang;
+    // Sekme etiketleri
+    const labels = {
+        'btn-route': L.route, 'btn-airport': L.transfer, 'btn-stay': L.stay,
+        'btn-attention': L.rules, 'btn-events': L.events, 'btn-currency': L.currency,
+        'btn-favorites': L.favs, 'btn-reminder': L.alarm
+    };
+    Object.entries(labels).forEach(([id, label]) => {
+        const el = document.getElementById(id);
+        if (el) el.querySelector('.tab-label').textContent = label;
+    });
+    // Isı haritası butonu
+    document.getElementById('heatmapToggle').innerHTML = `<i class="fas fa-fire"></i> ${L.heatmap}`;
+    // Dark mode butonu
+    document.getElementById('modeText').textContent = isDarkMode ? L.dayMode : L.nightMode;
+    // Mevcut sekmeyi yeniden render
+    generateRoute();
+}
+
+// ==================== ISI HARİTASI ====================
+let heatmapActive = false;
+let heatCircles = [];
+
+function toggleHeatmap() {
+    heatmapActive = !heatmapActive;
+    const btn = document.getElementById('heatmapToggle');
+    const legend = document.getElementById('heatLegend');
+    btn.classList.toggle('active', heatmapActive);
+    legend.style.display = heatmapActive ? 'block' : 'none';
+
+    if (heatmapActive) {
+        drawHeatmap();
+    } else {
+        heatCircles.forEach(c => map.removeLayer(c));
+        heatCircles = [];
+    }
+}
+
+function drawHeatmap() {
+    heatCircles.forEach(c => map.removeLayer(c));
+    heatCircles = [];
+    const cityData = places[selectedCity];
+    const allSpots = [...cityData.spots, cityData.food];
+    allSpots.forEach(p => {
+        const crowd = getSmartCrowdLevel(p);
+        const color = crowd > 70 ? '#e74c3c' : crowd > 40 ? '#f39c12' : '#2ecc71';
+        const radius = 80 + crowd * 4;
+        // Dış parlak halka
+        const outer = L.circle([p.lat, p.lon], {
+            radius: radius * 1.8,
+            color: 'transparent',
+            fillColor: color,
+            fillOpacity: 0.12,
+        }).addTo(map);
+        // İç yoğun çember
+        const inner = L.circle([p.lat, p.lon], {
+            radius: radius,
+            color: 'transparent',
+            fillColor: color,
+            fillOpacity: 0.30,
+        }).addTo(map);
+        heatCircles.push(outer, inner);
+    });
+}
+
+// generateRoute sonunda ısı haritasını güncelle
+const _origGenerateRoute = generateRoute;
+// (hook aşağıda window.onload'da yapılıyor)
+
+// ==================== HARİTA TIKLA PIN ==================== 
+let clickPin = null;
+map.on('click', function(e) {
+    const lat = e.latlng.lat.toFixed(5);
+    const lon = e.latlng.lng.toFixed(5);
+    if (clickPin) map.removeLayer(clickPin);
+    const iconHtml = `<div style="width:22px;height:22px;background:#e74c3c;border:3px solid white;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.3);"></div>`;
+    clickPin = L.marker([e.latlng.lat, e.latlng.lng], {
+        icon: L.divIcon({ className:'', html: iconHtml })
+    }).addTo(map);
+    document.getElementById('pinCoords').textContent = `${lat}°N, ${lon}°E`;
+    document.getElementById('pinNote').innerHTML = `<a href="https://www.google.com/maps?q=${lat},${lon}" target="_blank" style="color:#3498db;">Google Maps'te aç</a>`;
+    const info = document.getElementById('mapPinInfo');
+    info.style.display = 'flex';
+});
+
+// ==================== HATIRLATICILAR ====================
+let reminders = JSON.parse(localStorage.getItem('italya_reminders') || '[]');
+let reminderTimers = [];
+
+function addReminder() {
+    const place = document.getElementById('reminderPlace').value.trim();
+    const time  = document.getElementById('reminderTime').value;
+    const date  = document.getElementById('reminderDate').value;
+    const note  = document.getElementById('reminderNote').value.trim();
+    if (!place || !time || !date) { showToast('⚠️ Mekan, tarih ve saat zorunlu!'); return; }
+    const reminder = { id: Date.now(), place, time, date, note, fired: false };
+    reminders.push(reminder);
+    localStorage.setItem('italya_reminders', JSON.stringify(reminders));
+    document.getElementById('reminderPlace').value = '';
+    document.getElementById('reminderNote').value = '';
+    scheduleReminder(reminder);
+    renderReminders();
+    showToast(`🔔 Hatırlatıcı eklendi: ${place}`);
+}
+
+function scheduleReminder(rem) {
+    const targetMs = new Date(`${rem.date}T${rem.time}`).getTime();
+    const now = Date.now();
+    const diff = targetMs - now;
+    if (diff > 0 && !rem.fired) {
+        const t = setTimeout(() => {
+            showToast(`🔔 Ziyaret Zamanı: ${rem.place}!`);
+            rem.fired = true;
+            localStorage.setItem('italya_reminders', JSON.stringify(reminders));
+            renderReminders();
+        }, diff);
+        reminderTimers.push(t);
+    }
+}
+
+function removeReminder(id) {
+    reminders = reminders.filter(r => r.id !== id);
+    localStorage.setItem('italya_reminders', JSON.stringify(reminders));
+    renderReminders();
+}
+
+function renderReminders() {
+    const el = document.getElementById('reminder-list');
+    if (!el) return;
+    const L = langs[currentLang];
+    // placeholder güncelle
+    const pp = document.getElementById('reminderPlace');
+    const pn = document.getElementById('reminderNote');
+    if (pp) pp.placeholder = L.placeholderPlace;
+    if (pn) pn.placeholder = L.placeholderNote;
+    const btn = document.querySelector('.reminder-add-btn');
+    if (btn) btn.innerHTML = `<i class="fas fa-plus"></i> ${L.addBtn}`;
+
+    if (reminders.length === 0) {
+        el.innerHTML = `<div class="empty-fav"><i class="fas fa-bell" style="font-size:40px;opacity:0.15;display:block;margin-bottom:10px;"></i><b>${L.noReminder}</b></div>`;
+        return;
+    }
+    let html = '';
+    [...reminders].sort((a,b) => new Date(a.date+'T'+a.time) - new Date(b.date+'T'+b.time)).forEach(r => {
+        const dt = new Date(`${r.date}T${r.time}`);
+        const isPast = dt < new Date();
+        html += `<div class="reminder-item ${r.fired || isPast ? 'fired' : ''}">
+            <i class="fas fa-bell" style="color:${r.fired||isPast?'#ccc':'#e74c3c'};font-size:18px;flex-shrink:0;"></i>
+            <div style="flex:1;">
+                <div style="font-weight:700;font-size:14px;">${r.place}</div>
+                ${r.note ? `<div style="font-size:11px;color:var(--soft);">${r.note}</div>` : ''}
+            </div>
+            <div style="text-align:right;">
+                <div class="reminder-time-badge">${r.time}</div>
+                <div style="font-size:9px;color:var(--soft);margin-top:3px;">${r.date}</div>
+            </div>
+            <button onclick="removeReminder(${r.id})" style="background:none;border:none;cursor:pointer;color:#ccc;padding:4px;font-size:14px;" title="Sil">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>`;
+    });
+    el.innerHTML = html;
+}
+
+window.onload = () => {
+    setTimeout(renderEvents, 300);
+    setTimeout(function(){if(map)map.invalidateSize(true);},500);
+    selectCity(document.querySelector('.city-btn'));
+    updateFavBadge();
+    // Kaydedilmiş hatırlatıcıları yükle ve planla
+    reminders.forEach(scheduleReminder);
+    // generateRoute sonrası ısı haritasını güncelle (monkey-patch)
+    const origGen = generateRoute;
+    window.generateRoute = function() {
+        origGen();
+        if (heatmapActive) drawHeatmap();
+    };
+    // İlk tarih alanını bugüne ayarla
+    const today = new Date().toISOString().split('T')[0];
+    const dateEl = document.getElementById('reminderDate');
+    if (dateEl) dateEl.value = today;
+};
+
+const API_BASE = 'http://localhost:5000/api';
+let SESSION_ID = localStorage.getItem('italya_session') || ('sess_'+Math.random().toString(36).substr(2,9));
+localStorage.setItem('italya_session', SESSION_ID);
+
+async function apiFetch(endpoint, opts) {
+    try {
+        var res = await fetch(API_BASE + endpoint, Object.assign({headers:{'Content-Type':'application/json'}}, opts||{}));
+        if (!res.ok) throw new Error(res.status);
+        return await res.json();
+    } catch(e) {
+        console.warn('API:', e.message);
+        return null;
+    }
+}
+
+var activeMonthFilter = 'all';
+var monthNames = {1:'Ocak',2:'Subat',3:'Mart',4:'Nisan',5:'Mayis',6:'Haziran',7:'Temmuz',8:'Agustos',9:'Eylul',10:'Ekim',11:'Kasim',12:'Aralik'};
+
+async function renderEvents() {
+    var listEl = document.getElementById('events-list');
+    var filterEl = document.getElementById('month-filters');
+    if (!listEl) return;
+    listEl.innerHTML = '<div style="text-align:center;padding:30px;color:#999;">Yukleniyor...</div>';
+    var url = activeMonthFilter === 'all' ? '/events' : '/events?month=' + activeMonthFilter;
+    var events = await apiFetch(url);
+    if (!events || !events.length) {
+        listEl.innerHTML = '<div style="text-align:center;padding:30px;color:#999;">Etkinlik bulunamadi.</div>';
+        return;
+    }
+    if (filterEl) {
+        var months = [];
+        events.forEach(function(e){ if(months.indexOf(e.month)<0) months.push(e.month); });
+        months.sort(function(a,b){return a-b;});
+        var btns = document.createDocumentFragment();
+        var allBtn = document.createElement('button');
+        allBtn.textContent = 'Tumu';
+        allBtn.style.cssText = 'padding:5px 12px;border-radius:20px;border:none;cursor:pointer;font-size:12px;font-weight:600;margin-right:4px;background:' + (activeMonthFilter==='all'?'#8e44ad':'#eee') + ';color:' + (activeMonthFilter==='all'?'white':'#333');
+        allBtn.onclick = function(){ activeMonthFilter='all'; renderEvents(); };
+        btns.appendChild(allBtn);
+        months.forEach(function(m){
+            var btn = document.createElement('button');
+            btn.textContent = monthNames[m]||m;
+            btn.style.cssText = 'padding:5px 12px;border-radius:20px;border:none;cursor:pointer;font-size:12px;font-weight:600;margin-right:4px;background:' + (activeMonthFilter==m?'#8e44ad':'#eee') + ';color:' + (activeMonthFilter==m?'white':'#333');
+            btn.onclick = function(){ activeMonthFilter=m; renderEvents(); };
+            btns.appendChild(btn);
+        });
+        filterEl.innerHTML = '';
+        filterEl.appendChild(btns);
+    }
+    var now = new Date().getMonth()+1;
+    var html = '';
+    events.forEach(function(ev) {
+        var isNow = ev.month == now;
+        var borderColor = ev.color||'#8e44ad';
+        html += '<div style="background:white;border-radius:12px;margin-bottom:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);cursor:pointer;border-left:4px solid '+borderColor+';" onclick="showEvDetail('+ev.id+')">';
+        html += '<div style="padding:14px 16px;">';
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">';
+        html += '<span style="font-size:20px;">'+(ev.emoji||'🎭')+'</span>';
+        if(isNow) html += '<span style="background:#27ae60;color:white;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">NOW</span>';
+        html += '</div>';
+        html += '<div style="font-weight:700;font-size:15px;color:#1a1a2e;margin-bottom:4px;">'+ev.name+'</div>';
+        html += '<div style="font-size:12px;color:#666;">'+(ev.month_name||'')+' - '+(ev.city||'')+'</div>';
+        if(ev.dates) html += '<div style="font-size:11px;color:#999;margin-top:4px;">'+ev.dates+'</div>';
+        html += '</div></div>';
+    });
+    listEl.innerHTML = html;
+}
+
+async function showEvDetail(id) {
+    var ev = await apiFetch('/events/'+id);
+    if (!ev) return;
+    var tips = '';
+    if (ev.tips && ev.tips.length) ev.tips.filter(function(t){return t;}).forEach(function(t){ tips += '<div style="padding:6px 0;border-bottom:1px solid #f0f0f0;font-size:13px;">✔ '+t+'</div>'; });
+    var d = document.createElement('div');
+    d.id = 'ev-overlay';
+    d.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:flex-end;justify-content:center;';
+    d.innerHTML = '<div style="background:white;border-radius:24px 24px 0 0;width:100%;max-width:500px;max-height:85vh;overflow-y:auto;">'
+        +(ev.img_url?'<img src="'+ev.img_url+'" style="width:100%;height:180px;object-fit:cover;border-radius:24px 24px 0 0;">':'')
+        +'<div style="padding:20px;">'
+        +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">'
+        +'<span style="font-size:32px;">'+(ev.emoji||'🎭')+'</span>'
+        +'<div><div style="font-weight:800;font-size:18px;">'+ev.name+'</div>'
+        +'<div style="font-size:13px;color:#666;">'+ev.city+' · '+ev.month_name+'</div></div>'
+        +'<button onclick="document.getElementById(\'ev-overlay\').remove()" style="margin-left:auto;background:none;border:none;font-size:24px;cursor:pointer;color:#999;">×</button>'
+        +'</div>'
+        +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">'
+        +'<div style="background:#f8f8f8;padding:10px;border-radius:10px;font-size:12px;"><b>📅 Tarih</b><br>'+(ev.dates||'-')+'</div>'
+        +'<div style="background:#f8f8f8;padding:10px;border-radius:10px;font-size:12px;"><b>💰 Fiyat</b><br>'+(ev.price||'Ucretsiz')+'</div>'
+        +'<div style="background:#f8f8f8;padding:10px;border-radius:10px;font-size:12px;"><b>📍 Yer</b><br>'+(ev.location||ev.city)+'</div>'
+        +'<div style="background:#f8f8f8;padding:10px;border-radius:10px;font-size:12px;"><b>🎪 Tur</b><br>'+(ev.type||'-')+'</div>'
+        +'</div>'
+        +(ev.description?'<p style="font-size:13px;color:#444;line-height:1.6;margin-bottom:14px;">'+ev.description+'</p>':'')
+        +(tips?'<div style="background:#f0fff4;padding:12px;border-radius:10px;"><b style="font-size:12px;color:#27ae60;">💡 IPUCLARI</b>'+tips+'</div>':'')
+        +'</div></div>';
+    d.addEventListener('click', function(e){ if(e.target===d) d.remove(); });
+    document.body.appendChild(d);
+}
+
 </script>
+<!-- MEKAN DETAY PANELİ OVERLAY -->
+<div class="place-detail-overlay" id="placeDetailOverlay" onclick="closePlaceDetail(event)">
+    <div class="place-detail-panel" id="placeDetailPanel" style="position:relative;">
+        <button class="place-detail-close" onclick="closePlaceDetail(null, true)">×</button>
+        <div id="detailImgArea"></div>
+        <div class="place-detail-body">
+            <div class="place-detail-title" id="detailTitle"></div>
+            <div class="place-detail-meta" id="detailMeta"></div>
+            <div class="place-detail-desc" id="detailDesc"></div>
+            <div class="detail-actions" id="detailActions"></div>
+        </div>
+    </div>
+</div>
 </body>
 </html>
